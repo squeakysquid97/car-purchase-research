@@ -1,20 +1,14 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
 import CarResults from "../(components)/CarResults";
 
-type SearchParams = {
-  make?: string;
-  model?: string;
-  year?: string;
-};
+export default function CarPage() {
+  const searchParams = useSearchParams();
 
-export default function CarPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
-  const make = searchParams.make ?? "";
-  const model = searchParams.model ?? "";
-  const year = searchParams.year ?? "";
+  const make = searchParams.get("make") ?? "";
+  const model = searchParams.get("model") ?? "";
+  const year = searchParams.get("year") ?? "";
 
   return <CarResults make={make} model={model} year={year} />;
 }
-
