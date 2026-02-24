@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+type ModelRow = {
+  name: string;
+};
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const make = searchParams.get("make");
@@ -25,8 +29,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
+  const rows = (data ?? []) as ModelRow[];
+
   // De-dupe model names (just in case)
-  const unique = Array.from(new Set((data ?? []).map((row: any) => row.name))).map((name) => ({
+  const unique = Array.from(new Set(rows.map((row) => row.name))).map((name) => ({
     name,
   }));
 

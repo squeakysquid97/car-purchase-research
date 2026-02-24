@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+type YearRow = {
+  year: number;
+};
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const make = searchParams.get("make");
@@ -30,8 +34,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
+  const rows = (data ?? []) as YearRow[];
+
   // De-dupe years
-  const uniqueYears = Array.from(new Set((data ?? []).map((row: any) => row.year)))
+  const uniqueYears = Array.from(new Set(rows.map((row) => row.year)))
     .sort((a, b) => b - a)
     .map((year) => ({ year }));
 

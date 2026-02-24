@@ -3,6 +3,50 @@ import { createClient } from "@supabase/supabase-js";
 
 type Severity = "low" | "medium" | "high" | "catastrophic";
 
+type VehicleScoreRow = {
+  scoring_category_id: number | null;
+  raw_score: number | null;
+  notes: string | null;
+  scoring_categories: {
+    name: string | null;
+    // Supabase decimal may come back as string; we normalize to number later
+    weight_decimal: number | string | null;
+  } | null;
+};
+
+type RepairIssueRow = {
+  id: number;
+  issue_name: string;
+  severity: Severity | null;
+  typical_mileage: number | null;
+  cost_min: number | null;
+  cost_max: number | null;
+  failure_rate_estimate: number | string | null;
+  is_systemic: boolean;
+  description: string | null;
+};
+
+type CategoryBreakdownItem = {
+  scoring_category_id: number | null;
+  category: string | null;
+  weight_decimal: number | null;
+  raw_score: number | null;
+  weighted_points: number | null;
+  notes: string | null;
+};
+
+type RepairItem = {
+  id: number;
+  issue_name: string;
+  severity: Severity | null;
+  typical_mileage: number | null;
+  cost_min: number | null;
+  cost_max: number | null;
+  failure_rate_estimate: number | null;
+  is_systemic: boolean;
+  description: string | null;
+};
+
 function severityRank(s?: Severity | null) {
   switch (s) {
     case "catastrophic":
@@ -97,60 +141,66 @@ export async function GET(req: NextRequest) {
   const makeRow = modelRow?.makes?.[0];
   const final = data.vehicle_final_scores?.[0];
 
-  const categoryBreakdown =
-    (data.vehicle_scores ?? [])
-      .map((vs: any) => {
-        const cat = vs.scoring_categories;
-        const weight = cat?.weight_decimal ? Number(cat.weight_decimal) : null;
-        const raw = vs.raw_score != null ? Number(vs.raw_score) : null;
-        const weightedPoints =
-          weight != null && raw != null ? Math.round(raw * weight * 10 * 100) / 100 : null;
+  const vehicleScores = (data.vehicle_scores ?? []) as unknown as VehicleScoreRow[];
 
-        return {
-          scoring_category_id: vs.scoring_category_id,
-          category: cat?.name ?? null,
-          weight_decimal: weight,
-          raw_score: raw,
-          weighted_points: weightedPoints,
-          notes: vs.notes ?? null,
-        };
-      })
-      // sort by category id for consistent output
-      .sort((a: any, b: any) => (a.scoring_category_id ?? 0) - (b.scoring_category_id ?? 0));
+  const categoryBreakdown: CategoryBreakdownItem[] = vehicleScores
+    .map((vs) => {
+      const cat = vs.scoring_categories;
+      const weight = cat?.weight_decimal ? Number(cat.weight_decimal) : null;
+      const raw = vs.raw_score != null ? Number(vs.raw_score) : null;
+      const weightedPoints =
+        weight != null && raw != null
+          ? Math.round(raw * weight * 10 * 100) / 100
+          : null;
 
-  const repairs =
-    (data.repair_issues ?? [])
-      .map((ri: any) => ({
-        id: ri.id,
-        issue_name: ri.issue_name,
-        severity: ri.severity,
-        typical_mileage: ri.typical_mileage,
-        cost_min: ri.cost_min,
-        cost_max: ri.cost_max,
-        failure_rate_estimate:
-          ri.failure_rate_estimate != null ? Number(ri.failure_rate_estimate) : null,
-        is_systemic: ri.is_systemic,
-        description: ri.description,
-      }))
-      // sort: worst severity first, then highest cost_max
-      .sort((a: any, b: any) => {
-        const sev = severityRank(b.severity) - severityRank(a.severity);
-        if (sev !== 0) return sev;
-        return (b.cost_max ?? 0) - (a.cost_max ?? 0);
-      });
+      return {
+        scoring_category_id: vs.scoring_category_id,
+        category: cat?.name ?? null,
+        weight_decimal: weight,
+        raw_score: raw,
+        weighted_points: weightedPoints,
+        notes: vs.notes ?? null,
+      };
+    })
+    // sort by category id for consistent output
+    .sort(
+      (a, b) => (a.scoring_category_id ?? 0) - (b.scoring_category_id ?? 0)
+    );
+
+  const repairIssues = (data.repair_issues ?? []) as RepairIssueRow[];
+
+  const repairs: RepairItem[] = repairIssues
+    .map((ri) => ({
+      id: ri.id,
+      issue_name: ri.issue_name,
+      severity: ri.severity,
+      typical_mileage: ri.typical_mileage,
+      cost_min: ri.cost_min,
+      cost_max: ri.cost_max,
+      failure_rate_estimate:
+        ri.failure_rate_estimate != null
+          ? Number(ri.failure_rate_estimate)
+          : null,
+      is_systemic: ri.is_systemic,
+      description: ri.description,
+    }))
+    // sort: worst severity first, then highest cost_max
+    .sort((a, b) => {
+      const sev = severityRank(b.severity) - severityRank(a.severity);
+      if (sev !== 0) return sev;
+      return (b.cost_max ?? 0) - (a.cost_max ?? 0);
+    });
 
   // Optional: quick “why” summary (based on top positives/negatives)
   const why = {
-    strongest:
-      categoryBreakdown
-        .filter((c: any) => c.weighted_points != null)
-        .sort((a: any, b: any) => (b.weighted_points ?? 0) - (a.weighted_points ?? 0))
-        .slice(0, 2),
-    weakest:
-      categoryBreakdown
-        .filter((c: any) => c.weighted_points != null)
-        .sort((a: any, b: any) => (a.weighted_points ?? 0) - (b.weighted_points ?? 0))
-        .slice(0, 2),
+    strongest: categoryBreakdown
+      .filter((c) => c.weighted_points != null)
+      .sort((a, b) => (b.weighted_points ?? 0) - (a.weighted_points ?? 0))
+      .slice(0, 2),
+    weakest: categoryBreakdown
+      .filter((c) => c.weighted_points != null)
+      .sort((a, b) => (a.weighted_points ?? 0) - (b.weighted_points ?? 0))
+      .slice(0, 2),
   };
 
   return NextResponse.json({
