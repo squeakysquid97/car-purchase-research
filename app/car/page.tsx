@@ -1,14 +1,17 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
 import CarResults from "../(components)/CarResults";
 
-export default function CarPage() {
-  const searchParams = useSearchParams();
+type CarSearchParams = {
+  make?: string;
+  model?: string;
+  year?: string;
+};
 
-  const make = searchParams.get("make") ?? "";
-  const model = searchParams.get("model") ?? "";
-  const year = searchParams.get("year") ?? "";
+type CarPageProps = {
+  searchParams: Promise<CarSearchParams>;
+};
+
+export default async function CarPage({ searchParams }: CarPageProps) {
+  const { make = "", model = "", year = "" } = await searchParams;
 
   return <CarResults make={make} model={model} year={year} />;
 }
