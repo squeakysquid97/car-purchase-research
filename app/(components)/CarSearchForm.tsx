@@ -49,28 +49,31 @@ import { useRouter } from "next/navigation";
      setIsMakesLoading(true);
      setMakesError(null);
  
-     const loadMakes = async () => {
-       try {
-         const res = await fetch("/api/makes");
-         if (!res.ok) {
-           throw new Error("Failed to load makes");
-         }
-         const json = await res.json();
-         if (!json?.ok) {
-           throw new Error(json?.error || "Failed to load makes");
-         }
-         const options: MakeOption[] = (json.data ?? []).map((row: any) => ({
-           value: row.name as string,
-           label: row.name as string,
-         }));
-         setMakes(options);
-       } catch (error: any) {
-         setMakesError(error?.message || "Failed to load makes.");
-         setMakes([]);
-       } finally {
-         setIsMakesLoading(false);
-       }
-     };
+    const loadMakes = async () => {
+      try {
+        const res = await fetch("/api/makes");
+        if (!res.ok) {
+          throw new Error("Failed to load makes");
+        }
+        const json = await res.json();
+        if (!json?.ok) {
+          throw new Error(json?.error || "Failed to load makes");
+        }
+        const rows = (json.data ?? []) as { name: string }[];
+        const options: MakeOption[] = rows.map((row) => ({
+          value: row.name,
+          label: row.name,
+        }));
+        setMakes(options);
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Failed to load makes.";
+        setMakesError(message);
+        setMakes([]);
+      } finally {
+        setIsMakesLoading(false);
+      }
+    };
  
      void loadMakes();
    }, []);
@@ -94,27 +97,30 @@ import { useRouter } from "next/navigation";
      setIsModelsLoading(true);
      setIsYearsLoading(false);
  
-     try {
-       const params = new URLSearchParams({ make: value });
-       const res = await fetch(`/api/models?${params.toString()}`);
-       if (!res.ok) {
-         throw new Error("Failed to load models");
-       }
-       const json = await res.json();
-       if (!json?.ok) {
-         throw new Error(json?.error || "Failed to load models");
-       }
-       const options: ModelOption[] = (json.data ?? []).map((row: any) => ({
-         value: row.name as string,
-         label: row.name as string,
-       }));
-       setModels(options);
-     } catch (error: any) {
-       setModelsError(error?.message || "Failed to load models.");
-       setModels([]);
-     } finally {
-       setIsModelsLoading(false);
-     }
+    try {
+      const params = new URLSearchParams({ make: value });
+      const res = await fetch(`/api/models?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error("Failed to load models");
+      }
+      const json = await res.json();
+      if (!json?.ok) {
+        throw new Error(json?.error || "Failed to load models");
+      }
+      const rows = (json.data ?? []) as { name: string }[];
+      const options: ModelOption[] = rows.map((row) => ({
+        value: row.name,
+        label: row.name,
+      }));
+      setModels(options);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to load models.";
+      setModelsError(message);
+      setModels([]);
+    } finally {
+      setIsModelsLoading(false);
+    }
    }, []);
  
    const handleModelChange = useCallback(
@@ -132,30 +138,33 @@ import { useRouter } from "next/navigation";
  
        setIsYearsLoading(true);
  
-       try {
-         const params = new URLSearchParams({
-           make: selectedMake,
-           model: value,
-         });
-         const res = await fetch(`/api/years?${params.toString()}`);
-         if (!res.ok) {
-           throw new Error("Failed to load years");
-         }
-         const json = await res.json();
-         if (!json?.ok) {
-           throw new Error(json?.error || "Failed to load years");
-         }
-         const options: YearOption[] = (json.data ?? []).map((row: any) => ({
-           value: String(row.year),
-           label: String(row.year),
-         }));
-         setYears(options);
-       } catch (error: any) {
-         setYearsError(error?.message || "Failed to load years.");
-         setYears([]);
-       } finally {
-         setIsYearsLoading(false);
-       }
+      try {
+        const params = new URLSearchParams({
+          make: selectedMake,
+          model: value,
+        });
+        const res = await fetch(`/api/years?${params.toString()}`);
+        if (!res.ok) {
+          throw new Error("Failed to load years");
+        }
+        const json = await res.json();
+        if (!json?.ok) {
+          throw new Error(json?.error || "Failed to load years");
+        }
+        const rows = (json.data ?? []) as { year: number }[];
+        const options: YearOption[] = rows.map((row) => ({
+          value: String(row.year),
+          label: String(row.year),
+        }));
+        setYears(options);
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Failed to load years.";
+        setYearsError(message);
+        setYears([]);
+      } finally {
+        setIsYearsLoading(false);
+      }
      },
      [selectedMake]
    );

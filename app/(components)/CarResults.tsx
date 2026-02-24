@@ -101,7 +101,7 @@
          const res = await fetch(`/api/car?${params.toString()}`, {
            signal: controller.signal,
          });
-         const json = (await res.json()) as ApiResponse;
+        const json = (await res.json()) as ApiResponse;
 
          if (!res.ok || !json.ok) {
            const message =
@@ -112,12 +112,12 @@
            return;
          }
 
-         setData(json.data);
-       } catch (err: any) {
-         if (err?.name === "AbortError") return;
-         setError("Network error while loading this vehicle.");
-         setData(null);
-       } finally {
+        setData(json.data);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") return;
+        setError("Network error while loading this vehicle.");
+        setData(null);
+      } finally {
          setLoading(false);
        }
      };
