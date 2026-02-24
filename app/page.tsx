@@ -1,5 +1,5 @@
-import LandingPage from "./landingPage";
+import CarSearchForm from "./(components)/CarSearchForm";
 
 export default function Home() {
-  return <LandingPage />;
+  return <CarSearchForm />;
 }
