@@ -136,10 +136,17 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Supabase returns relations as arrays
-  const modelRow = data.models?.[0];
-  const makeRow = modelRow?.makes?.[0];
-  const final = data.vehicle_final_scores?.[0];
+  // Depending on relationship cardinality/config, Supabase can return
+  // nested relations as either objects or arrays.
+  const modelRow = Array.isArray(data.models) ? data.models[0] : data.models;
+  const makeRow = modelRow?.makes
+    ? Array.isArray(modelRow.makes)
+      ? modelRow.makes[0]
+      : modelRow.makes
+    : null;
+  const final = Array.isArray(data.vehicle_final_scores)
+    ? data.vehicle_final_scores[0]
+    : data.vehicle_final_scores;
 
   const vehicleScores = (data.vehicle_scores ?? []) as unknown as VehicleScoreRow[];
 

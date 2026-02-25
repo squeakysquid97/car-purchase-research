@@ -77,6 +77,46 @@
    return `${(value * 100).toFixed(1)}%`;
  }
 
+ function getBuyabilityTheme(scoreLabel: string | null) {
+   switch (scoreLabel?.toLowerCase()) {
+     case "avoid":
+       return {
+         panel:
+           "border-red-500/40 from-red-500/20 via-red-500/10 to-transparent",
+         badge: "bg-red-500/20 text-red-100",
+       };
+     case "long-term keeper":
+       return {
+         panel:
+           "border-emerald-500/40 from-emerald-500/20 via-emerald-500/10 to-transparent",
+         badge: "bg-emerald-500/20 text-emerald-100",
+       };
+     case "reliable buy":
+       return {
+         panel:
+           "border-sky-500/40 from-sky-500/20 via-sky-500/10 to-transparent",
+         badge: "bg-sky-500/20 text-sky-100",
+       };
+     case "high risk":
+       return {
+         panel:
+           "border-yellow-500/40 from-yellow-500/20 via-yellow-500/10 to-transparent",
+         badge: "bg-yellow-500/20 text-yellow-100",
+       };
+     case "caution":
+       return {
+         panel:
+           "border-orange-500/40 from-orange-500/20 via-orange-500/10 to-transparent",
+         badge: "bg-orange-500/20 text-orange-100",
+       };
+     default:
+       return {
+         panel: "border-white/10 from-white/10 via-white/5 to-transparent",
+         badge: "bg-white/10 text-white/90",
+       };
+   }
+ }
+
  export default function CarResults({ make, model, year }: CarResultsProps) {
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
@@ -130,6 +170,7 @@
    const titleMake = make || data?.make || "Vehicle";
    const titleModel = model || data?.model || "";
    const titleYear = year || (data?.year ? String(data.year) : "");
+   const buyabilityTheme = getBuyabilityTheme(data?.score_label ?? null);
 
    return (
      <div className="min-h-screen bg-black text-white flex flex-col">
@@ -177,7 +218,9 @@
            {data && (
              <>
                {/* Score + label hero */}
-               <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+               <section
+                 className={`rounded-2xl border bg-gradient-to-br p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 ${buyabilityTheme.panel}`}
+               >
                  <div>
                    <p className="text-xs uppercase tracking-[0.25em] text-white/60">
                      Overall buyability
@@ -195,7 +238,9 @@
                      )}
                    </h1>
                    {data.score_label && (
-                     <p className="mt-1 inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90">
+                     <p
+                       className={`mt-1 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${buyabilityTheme.badge}`}
+                     >
                        {data.score_label}
                      </p>
                    )}
