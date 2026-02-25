@@ -206,8 +206,8 @@ import { useRouter } from "next/navigation";
        <header className="flex items-center justify-center py-8 border-b border-white/10">
          <div className="flex items-center gap-4">
            <Image
-             className="dark:invert"
-             src="/cprlogo.svg"
+  
+             src="/cprlogo.webp"
              alt="Car Purchase Research logo"
              width={260}
              height={40}

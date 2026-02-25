@@ -7,7 +7,7 @@ export default function LandingPage() {
         <Image
           src="/cprlogo.webp"
           alt="CPR logo"
-          width={1000}
+          width={500}
           height={100}
           priority
         />
