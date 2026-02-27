@@ -236,6 +236,21 @@ type ErrorKind = "not_found" | "retryable" | null;
                {titleYear} {titleMake} {titleModel}
              </span>
            </p>
+           <div className="flex items-center gap-3 pt-1 text-[11px] text-white/60">
+             <Link
+               href="/methodology"
+               className="underline underline-offset-2 hover:text-white"
+             >
+               Methodology
+             </Link>
+             <span aria-hidden="true">•</span>
+             <Link
+               href="/disclaimer"
+               className="underline underline-offset-2 hover:text-white"
+             >
+               Disclaimer
+             </Link>
+           </div>
          </div>
          <Link
            href="/"
@@ -606,19 +621,26 @@ type ErrorKind = "not_found" | "retryable" | null;
              </>
            )}
 
-           <p className="pt-2 text-[11px] leading-relaxed text-white/50">
-             This report is based on aggregated repair records, recalls, and
-             historical ownership data. It is not a guarantee of future
-             performance. Always combine this with a pre-purchase inspection and
-             your own judgment.{" "}
-             <a
-               href="/disclaimer"
-               className="underline underline-offset-2 hover:text-white"
-             >
-               Read the full disclaimer
-             </a>
-             .
-           </p>
+          <p className="pt-2 text-[11px] leading-relaxed text-white/50">
+            This report is based on aggregated repair records, recalls, and
+            historical ownership data. It is not a guarantee of future
+            performance. Always combine this with a pre-purchase inspection and
+            your own judgment.{" "}
+            <Link
+              href="/methodology"
+              className="underline underline-offset-2 hover:text-white"
+            >
+              Review methodology
+            </Link>
+            {" "}and{" "}
+            <Link
+              href="/disclaimer"
+              className="underline underline-offset-2 hover:text-white"
+            >
+              read the full disclaimer
+            </Link>
+            .
+          </p>
          </div>
        </main>
      </div>

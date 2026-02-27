@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type MakeOption = {
   value: string;
@@ -24,6 +25,17 @@ type YearOption = {
   label: string;
 };
 
+const POPULAR_VEHICLES = [
+  { label: "2020 Toyota Camry", href: "/cars/toyota/camry/2020" },
+  { label: "2019 Honda Civic", href: "/cars/honda/civic/2019" },
+  { label: "2021 Mazda CX-5", href: "/cars/mazda/cx-5/2021" },
+  { label: "2018 Ford F-150", href: "/cars/ford/f-150/2018" },
+  { label: "2022 Toyota RAV4", href: "/cars/toyota/rav4/2022" },
+  { label: "2020 Subaru Outback", href: "/cars/subaru/outback/2020" },
+  { label: "2019 Hyundai Elantra", href: "/cars/hyundai/elantra/2019" },
+  { label: "2021 Chevrolet Silverado 1500", href: "/cars/chevrolet/silverado-1500/2021" },
+] as const;
+
 function matchOptionValue<T extends { value: string }>(
   input: string,
   options: T[]
@@ -34,6 +46,15 @@ function matchOptionValue<T extends { value: string }>(
     (option) => option.value.trim().toLowerCase() === normalized
   );
   return match?.value ?? null;
+}
+
+function toSlug(value: string) {
+  return encodeURIComponent(
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+  );
 }
 
 export default function CarSearchForm() {
@@ -243,13 +264,10 @@ export default function CarSearchForm() {
 
       setIsSubmitting(true);
 
-      const params = new URLSearchParams({
-        make: selectedMake,
-        model: selectedModel,
-        year: selectedYear,
-      });
-
-      router.push(`/car?${params.toString()}`);
+      const makeSlug = toSlug(selectedMake);
+      const modelSlug = toSlug(selectedModel);
+      const yearValue = selectedYear.trim();
+      router.push(`/cars/${makeSlug}/${modelSlug}/${encodeURIComponent(yearValue)}`);
     },
     [canSubmit, router, selectedMake, selectedModel, selectedYear]
   );
@@ -475,16 +493,56 @@ export default function CarSearchForm() {
               <p className="pt-1 text-[11px] leading-relaxed text-white/60">
                 This tool summarizes patterns from historical repair data,
                 recalls, and ownership reports. It is not a substitute for a
-                professional inspection or your own judgment.{" "}
-                <a
+                professional inspection or your own judgment. Review our{" "}
+                <Link
+                  href="/methodology"
+                  className="underline underline-offset-2 hover:text-white"
+                >
+                  methodology
+                </Link>
+                {" "}and{" "}
+                <Link
                   href="/disclaimer"
                   className="underline underline-offset-2 hover:text-white"
                 >
-                  Read the full disclaimer
-                </a>
+                  disclaimer
+                </Link>
                 .
               </p>
             </form>
+
+            <div className="border-t border-white/10 pt-4 space-y-2">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-white/45">
+                Popular vehicles
+              </p>
+              <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+                {POPULAR_VEHICLES.map((vehicle) => (
+                  <Link
+                    key={vehicle.href}
+                    href={vehicle.href}
+                    className="text-xs text-white/65 underline underline-offset-2 hover:text-white"
+                  >
+                    {vehicle.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-white/50">
+            <Link
+              href="/methodology"
+              className="underline underline-offset-2 hover:text-white"
+            >
+              Methodology
+            </Link>
+            <span aria-hidden="true">•</span>
+            <Link
+              href="/disclaimer"
+              className="underline underline-offset-2 hover:text-white"
+            >
+              Disclaimer
+            </Link>
           </div>
         </div>
       </main>
