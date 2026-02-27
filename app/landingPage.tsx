@@ -6,7 +6,7 @@ export default function LandingPage() {
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-center">
         <Image
           className="dark:invert"
-          src="/cprlogo.svg"
+          src="/cprlogo.png"
           alt="CPR logo"
           width={200}
           height={38}
