@@ -7,7 +7,7 @@ type CarErrorPageProps = {
   reset: () => void;
 };
 
-export default function CarErrorPage({ error: _error, reset }: CarErrorPageProps) {
+export default function CarErrorPage({ reset }: CarErrorPageProps) {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <header className="border-b border-white/10 px-4 py-4 sm:px-6 lg:px-8">
