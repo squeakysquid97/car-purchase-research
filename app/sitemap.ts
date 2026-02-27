@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
 
-export const revalidate = 60 * 60 * 6;
+export const revalidate = 21600;
 
 type VehicleYearRow = {
   year: number | null;
