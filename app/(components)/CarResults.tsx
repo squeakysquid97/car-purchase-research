@@ -2,6 +2,7 @@
 
  import { useEffect, useState } from "react";
  import Link from "next/link";
+ import SeverityBadge from "./SeverityBadge";
 
  type Severity = "low" | "medium" | "high" | "catastrophic";
 
@@ -52,20 +53,25 @@
    };
  };
 
- type ApiResponse =
-   | { ok: false; error: string }
-   | { ok: true; data: CarData };
+type ApiResponse =
+  | { ok: false; error: string }
+  | { ok: true; data: CarData };
 
- interface CarResultsProps {
-   make: string;
-   model: string;
-   year: string;
- }
+const SCORE_TIERS = [
+  { label: "Avoid", shortLabel: "Avoid", threshold: 0 },
+  { label: "High Risk", shortLabel: "Risk", threshold: 40 },
+  { label: "Caution", shortLabel: "Caution", threshold: 55 },
+  { label: "Reliable Buy", shortLabel: "Reliable", threshold: 70 },
+  { label: "Long-Term Keeper", shortLabel: "Keeper", threshold: 85 },
+] as const;
 
- function formatSeverity(severity: Severity | null) {
-   if (!severity) return "Unknown";
-   return severity.charAt(0).toUpperCase() + severity.slice(1);
- }
+interface CarResultsProps {
+  make: string;
+  model: string;
+  year: string;
+}
+
+type ErrorKind = "not_found" | "retryable" | null;
 
  function formatMoney(value: number | null) {
    if (value == null) return "n/a";
@@ -74,7 +80,8 @@
 
  function formatPercent(value: number | null) {
    if (value == null) return "n/a";
-   return `${(value * 100).toFixed(1)}%`;
+   const normalized = value <= 1 ? value * 100 : value;
+   return `${normalized.toFixed(1)}%`;
  }
 
  function getBuyabilityTheme(scoreLabel: string | null) {
@@ -120,17 +127,22 @@
  export default function CarResults({ make, model, year }: CarResultsProps) {
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
+   const [errorKind, setErrorKind] = useState<ErrorKind>(null);
    const [data, setData] = useState<CarData | null>(null);
+   const [animatedScore, setAnimatedScore] = useState(0);
+   const [retryCount, setRetryCount] = useState(0);
 
    useEffect(() => {
      if (!make || !model || !year) {
-       setError("Missing make, model, or year.");
+       setError("Choose a make, model, and year to view a report.");
+       setErrorKind("retryable");
        setData(null);
        return;
      }
 
      setLoading(true);
      setError(null);
+     setErrorKind(null);
      setData(null);
 
      const controller = new AbortController();
@@ -141,13 +153,30 @@
          const res = await fetch(`/api/car?${params.toString()}`, {
            signal: controller.signal,
          });
-        const json = (await res.json()) as ApiResponse;
+         let json: ApiResponse | null = null;
+         try {
+           json = (await res.json()) as ApiResponse;
+         } catch {
+           json = null;
+         }
 
-         if (!res.ok || !json.ok) {
-           const message =
-             (!json.ok && json.error) ||
-             "Sorry, we could not load this vehicle.";
-           setError(message);
+         if (res.status === 404) {
+           setErrorKind("not_found");
+           setError("We don't have data for that vehicle yet.");
+           setData(null);
+           return;
+         }
+
+         if (!res.ok) {
+           setErrorKind("retryable");
+           setError("Something went wrong.");
+           setData(null);
+           return;
+         }
+
+         if (!json || !json.ok) {
+           setErrorKind("retryable");
+           setError("Something went wrong.");
            setData(null);
            return;
          }
@@ -155,7 +184,8 @@
         setData(json.data);
       } catch (err: unknown) {
         if (err instanceof Error && err.name === "AbortError") return;
-        setError("Network error while loading this vehicle.");
+        setErrorKind("retryable");
+        setError("Something went wrong.");
         setData(null);
       } finally {
          setLoading(false);
@@ -165,12 +195,33 @@
      void load();
 
      return () => controller.abort();
-   }, [make, model, year]);
+   }, [make, model, retryCount, year]);
 
    const titleMake = make || data?.make || "Vehicle";
    const titleModel = model || data?.model || "";
    const titleYear = year || (data?.year ? String(data.year) : "");
    const buyabilityTheme = getBuyabilityTheme(data?.score_label ?? null);
+   const finalScore =
+     data?.final_score != null
+       ? Math.max(0, Math.min(100, Number(data.final_score)))
+       : null;
+   const scoreLabelKey = data?.score_label?.trim().toLowerCase() || "";
+   const isAvoidLabel = scoreLabelKey === "avoid";
+   const isKeeperLabel = scoreLabelKey === "long-term keeper";
+
+   useEffect(() => {
+     if (finalScore == null) {
+       setAnimatedScore(0);
+       return;
+     }
+
+     setAnimatedScore(0);
+     const frame = window.requestAnimationFrame(() => {
+       setAnimatedScore(finalScore);
+     });
+
+     return () => window.cancelAnimationFrame(frame);
+   }, [finalScore]);
 
    return (
      <div className="min-h-screen bg-black text-white flex flex-col">
@@ -203,8 +254,25 @@
              </div>
            )}
            {!loading && error && (
-             <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-6 text-sm text-red-100">
-               {error}
+             <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-sm text-white/80 space-y-3">
+               <p>{error}</p>
+               {errorKind === "not_found" && (
+                 <Link
+                   href="/"
+                   className="inline-flex text-xs font-medium text-white/80 underline underline-offset-4 hover:text-white"
+                 >
+                   Back to search
+                 </Link>
+               )}
+               {errorKind === "retryable" && (
+                 <button
+                   type="button"
+                   className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/15"
+                   onClick={() => setRetryCount((prev) => prev + 1)}
+                 >
+                   Try again
+                 </button>
+               )}
              </div>
            )}
 
@@ -226,11 +294,11 @@
                      Overall buyability
                    </p>
                    <h1 className="mt-2 text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight flex items-baseline gap-3">
-                     {data.final_score != null ? (
+                     {finalScore != null ? (
                        <>
-                         <span>{data.final_score.toFixed(1)}</span>
+                         <span>{finalScore.toFixed(1)}</span>
                          <span className="text-base font-normal text-white/60">
-                           / 10
+                           / 100
                          </span>
                        </>
                      ) : (
@@ -244,6 +312,71 @@
                        {data.score_label}
                      </p>
                    )}
+                   {finalScore != null && (
+                     <div className="mt-4 max-w-xl">
+                        <div className="relative pt-5">
+                          <div
+                            role="progressbar"
+                            aria-label={`Buyability score ${finalScore.toFixed(1)} out of 100`}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={Number(finalScore.toFixed(1))}
+                            className="relative h-2 overflow-hidden rounded-full bg-white/15"
+                          >
+                            <div
+                              className="h-full rounded-full bg-white/80 transition-[width] duration-700 ease-out"
+                              style={{ width: `${animatedScore}%` }}
+                            />
+                            {SCORE_TIERS.map((tier, index) => {
+                              if (
+                                index === 0 ||
+                                index === SCORE_TIERS.length - 1
+                              ) {
+                                return null;
+                              }
+
+                              const rawPosition =
+                                (index / (SCORE_TIERS.length - 1)) * 100;
+                              const position =
+                                rawPosition === 0
+                                  ? 0.5
+                                  : rawPosition === 100
+                                  ? 99.5
+                                  : rawPosition;
+
+                              return (
+                                <span
+                                  key={`tick-${tier.label}`}
+                                  className="absolute top-0 z-10 h-2 w-px bg-black/50 shadow-[0_0_0_1px_rgba(255,255,255,0.2)]"
+                                  style={{ left: `${position}%` }}
+                                  aria-hidden="true"
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between text-[10px]">
+                          <span
+                            className={
+                              isAvoidLabel
+                                ? "text-white/90 font-medium"
+                                : "text-white/60"
+                            }
+                          >
+                            Avoid
+                          </span>
+                          <span
+                            className={
+                              isKeeperLabel
+                                ? "text-white/90 font-medium"
+                                : "text-white/60"
+                            }
+                          >
+                            Long-Term Keeper
+                          </span>
+                        </div>
+                      </div>
+                    )}
                    {data.summary_text && (
                      <p className="mt-4 text-sm text-white/80 max-w-xl">
                        {data.summary_text}
@@ -429,17 +562,21 @@
                          key={repair.id}
                          className="rounded-xl bg-black/40 border border-white/5 px-3 py-3 text-xs sm:text-sm space-y-2"
                        >
-                         <div className="flex items-start justify-between gap-3">
+                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                            <div>
                              <p className="font-medium text-white/90">
                                {repair.issue_name}
                              </p>
-                             <p className="text-[11px] text-white/60">
-                               Severity: {formatSeverity(repair.severity)}
-                               {repair.is_systemic ? " • Systemic issue" : null}
-                             </p>
+                             <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                               <SeverityBadge severity={repair.severity} />
+                               {repair.is_systemic ? (
+                                 <span className="inline-flex items-center rounded-full border border-sky-400/25 bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-sky-100">
+                                   Systemic
+                                 </span>
+                               ) : null}
+                             </div>
                            </div>
-                           <div className="text-right text-[11px] text-white/70">
+                           <div className="text-[11px] text-white/70 sm:text-right">
                              <p>
                                Typical mileage:{" "}
                                {repair.typical_mileage != null
@@ -487,4 +624,6 @@
      </div>
    );
  }
+
+
 
