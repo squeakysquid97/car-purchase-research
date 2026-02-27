@@ -21,6 +21,11 @@ type CarApiMetadataResponse =
   | { ok: true; data: CarApiMetadataData }
   | { ok: false; error: string };
 
+type ScoreSummary = {
+  finalScore: number | null;
+  scoreLabel: string | null;
+};
+
 function decodeSegment(segment: string): string {
   try {
     return decodeURIComponent(segment).replace(/-/g, " ").trim();
@@ -55,7 +60,7 @@ async function getScoreSummary(
   model: string,
   year: string,
   baseUrl: string
-): Promise<{ finalScore: number | null; scoreLabel: string | null }> {
+): Promise<ScoreSummary> {
   try {
     const qs = new URLSearchParams({ make, model, year }).toString();
     const res = await fetch(`${baseUrl}/api/car?${qs}`, {
@@ -83,6 +88,16 @@ async function getScoreSummary(
   }
 }
 
+function buildDescription(
+  vehicleName: string,
+  finalScore: number | null,
+  scoreLabel: string | null
+) {
+  return finalScore != null && scoreLabel
+    ? `${vehicleName} buyability score: ${finalScore.toFixed(1)}/100 (${scoreLabel}). Review risk categories and notable repair issues.`
+    : `Buyability report for ${vehicleName}. Review score, risk categories, and notable repair issues.`;
+}
+
 export async function generateMetadata({
   params,
 }: CarSlugPageProps): Promise<Metadata> {
@@ -105,10 +120,7 @@ export async function generateMetadata({
   );
 
   const title = `${vehicleName} Buyability Score`;
-  const description =
-    finalScore != null && scoreLabel
-      ? `${vehicleName} buyability score: ${finalScore.toFixed(1)}/100 (${scoreLabel}). Review risk categories and notable repair issues.`
-      : `Buyability report for ${vehicleName}. Review score, risk categories, and notable repair issues.`;
+  const description = buildDescription(vehicleName, finalScore, scoreLabel);
 
   return {
     metadataBase: new URL(baseUrl),
@@ -133,13 +145,69 @@ export async function generateMetadata({
 }
 
 export default async function CarSlugPage({ params }: CarSlugPageProps) {
-  const { make, model, year } = await params;
+  const routeParams = await params;
+  const decodedMake = decodeSegment(routeParams.make);
+  const decodedModel = decodeSegment(routeParams.model);
+  const decodedYear = decodeSegment(routeParams.year);
+  const vehicleName = `${decodedYear} ${decodedMake} ${decodedModel}`.trim();
+  const baseUrl = getBaseUrl();
+  const canonicalPath = getCanonicalPath(routeParams);
+  const canonicalUrl = `${baseUrl}${canonicalPath}`;
+  const { finalScore, scoreLabel } = await getScoreSummary(
+    decodedMake,
+    decodedModel,
+    decodedYear,
+    baseUrl
+  );
+  const description = buildDescription(vehicleName, finalScore, scoreLabel);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        name: `${vehicleName} Buyability Score`,
+        description,
+        url: canonicalUrl,
+      },
+      {
+        "@type": "Vehicle",
+        name: vehicleName,
+        model: decodedModel,
+        brand: {
+          "@type": "Brand",
+          name: decodedMake,
+        },
+        description,
+        additionalProperty: [
+          {
+            "@type": "PropertyValue",
+            name: "Model Year",
+            value: decodedYear,
+          },
+          {
+            "@type": "PropertyValue",
+            name: "Buyability Score",
+            value:
+              finalScore != null ? Number(finalScore.toFixed(1)) : "Not available",
+          },
+          {
+            "@type": "PropertyValue",
+            name: "Score Label",
+            value: scoreLabel ?? "Not available",
+          },
+        ],
+      },
+    ],
+  };
 
   return (
-    <CarResults
-      make={decodeSegment(make)}
-      model={decodeSegment(model)}
-      year={decodeSegment(year)}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <CarResults make={decodedMake} model={decodedModel} year={decodedYear} />
+    </>
   );
 }
