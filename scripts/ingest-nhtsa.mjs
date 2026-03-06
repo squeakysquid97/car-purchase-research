@@ -2,16 +2,16 @@ import { createClient } from '@supabase/supabase-js';
 
 // Curated list of popular makes for better signal coverage.
 const TARGET_MAKES = [
-  'TOYOTA',
-  // 'HONDA',
-  // 'FORD',
-  // 'CHEVROLET',
-  // 'NISSAN',
-  // 'JEEP',
-  // 'HYUNDAI',
-  // 'KIA',
-  // 'SUBARU',
-  // 'BMW',
+  // 'TOYOTA',
+  'HONDA',
+  'FORD',
+  'CHEVROLET',
+  'NISSAN',
+  'JEEP',
+  'HYUNDAI',
+  'KIA',
+  'SUBARU',
+  'BMW',
 ];
 
 // Temporary test scope toggle. Set ENABLED=false to revert to full run.
@@ -519,6 +519,20 @@ async function recalculateVehicleScores(vehicleYearId) {
   return true;
 }
 
+async function rebuildVehicleScores(vehicleYearId) {
+  const { error } = await supabase.rpc('rebuild_vehicle_scores', {
+    p_vehicle_year_id: vehicleYearId,
+  });
+
+  if (error) {
+    console.error(`Vehicle scores rebuild failed for vehicle_year_id ${vehicleYearId}: ${error.message}`);
+    return false;
+  }
+
+  console.log(`Vehicle scores rebuilt for vehicle_year_id ${vehicleYearId}`);
+  return true;
+}
+
 async function upsertNhtsaConsideration(vehicleYearId, recallCount, complaintCount) {
   const classification = classifyConsideration(recallCount, complaintCount);
   const description = `NHTSA signals: ${recallCount} recalls, ${complaintCount} complaints (raw counts). ${classification.driver}.`;
@@ -818,7 +832,10 @@ async function runSingleVehicleMode() {
           insertedRepairIssues += issuesResult.upserted;
           skippedProtectedRepairIssues += issuesResult.skippedProtected;
 
-          await recalculateVehicleScores(vehicleYearId);
+          const rebuiltVehicleScores = await rebuildVehicleScores(vehicleYearId);
+          if (rebuiltVehicleScores) {
+            await recalculateVehicleScores(vehicleYearId);
+          }
           await updateVehicleYearIngestionSuccess(vehicleYearId, complaintCount, recallCount);
 
           console.log(
@@ -882,7 +899,10 @@ async function runQueuedBatchMode() {
           : false;
 
       const issuesResult = await insertRepairIssues(vehicleYearId, recallsResults, complaintsResults);
-      await recalculateVehicleScores(vehicleYearId);
+      const rebuiltVehicleScores = await rebuildVehicleScores(vehicleYearId);
+      if (rebuiltVehicleScores) {
+        await recalculateVehicleScores(vehicleYearId);
+      }
       await updateVehicleYearIngestionSuccess(vehicleYearId, complaintCount, recallCount);
 
       completed += 1;
