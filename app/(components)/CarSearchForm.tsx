@@ -1,14 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import {
-  useCallback,
-  useEffect,
-  useState,
-  type FormEvent,
-} from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 type MakeOption = {
   value: string;
@@ -24,38 +18,6 @@ type YearOption = {
   value: string;
   label: string;
 };
-
-const POPULAR_VEHICLES = [
-  { label: "2020 Toyota Camry", href: "/cars/toyota/camry/2020" },
-  { label: "2019 Honda Civic", href: "/cars/honda/civic/2019" },
-  { label: "2021 Mazda CX-5", href: "/cars/mazda/cx-5/2021" },
-  { label: "2018 Ford F-150", href: "/cars/ford/f-150/2018" },
-  { label: "2022 Toyota RAV4", href: "/cars/toyota/rav4/2022" },
-  { label: "2020 Subaru Outback", href: "/cars/subaru/outback/2020" },
-  { label: "2019 Hyundai Elantra", href: "/cars/hyundai/elantra/2019" },
-  { label: "2021 Chevrolet Silverado 1500", href: "/cars/chevrolet/silverado-1500/2021" },
-] as const;
-
-function matchOptionValue<T extends { value: string }>(
-  input: string,
-  options: T[]
-) {
-  const normalized = input.trim().toLowerCase();
-  if (!normalized) return null;
-  const match = options.find(
-    (option) => option.value.trim().toLowerCase() === normalized
-  );
-  return match?.value ?? null;
-}
-
-function toSlug(value: string) {
-  return encodeURIComponent(
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-  );
-}
 
 export default function CarSearchForm() {
   const router = useRouter();
@@ -84,14 +46,10 @@ export default function CarSearchForm() {
 
     try {
       const res = await fetch("/api/makes");
-      if (!res.ok) {
-        throw new Error("Failed to load makes");
-      }
+      if (!res.ok) throw new Error("Failed to load makes");
 
       const json = await res.json();
-      if (!json?.ok) {
-        throw new Error(json?.error || "Failed to load makes");
-      }
+      if (!json?.ok) throw new Error(json?.error || "Failed to load makes");
 
       const rows = (json.data ?? []) as { name: string }[];
       const options: MakeOption[] = rows.map((row) => ({
@@ -100,7 +58,7 @@ export default function CarSearchForm() {
       }));
       setMakes(options);
     } catch {
-      // Keep any previously loaded options to avoid unnecessary UI churn.
+      // Keep any already-loaded values where possible.
       setMakesError("We couldn't load makes right now.");
     } finally {
       setIsMakesLoading(false);
@@ -114,14 +72,10 @@ export default function CarSearchForm() {
     try {
       const params = new URLSearchParams({ make });
       const res = await fetch(`/api/models?${params.toString()}`);
-      if (!res.ok) {
-        throw new Error("Failed to load models");
-      }
+      if (!res.ok) throw new Error("Failed to load models");
 
       const json = await res.json();
-      if (!json?.ok) {
-        throw new Error(json?.error || "Failed to load models");
-      }
+      if (!json?.ok) throw new Error(json?.error || "Failed to load models");
 
       const rows = (json.data ?? []) as { name: string }[];
       const options: ModelOption[] = rows.map((row) => ({
@@ -130,7 +84,6 @@ export default function CarSearchForm() {
       }));
       setModels(options);
     } catch {
-      // Keep options currently shown for this selection flow when possible.
       setModelsError("We couldn't load models right now.");
     } finally {
       setIsModelsLoading(false);
@@ -144,14 +97,10 @@ export default function CarSearchForm() {
     try {
       const params = new URLSearchParams({ make, model });
       const res = await fetch(`/api/years?${params.toString()}`);
-      if (!res.ok) {
-        throw new Error("Failed to load years");
-      }
+      if (!res.ok) throw new Error("Failed to load years");
 
       const json = await res.json();
-      if (!json?.ok) {
-        throw new Error(json?.error || "Failed to load years");
-      }
+      if (!json?.ok) throw new Error(json?.error || "Failed to load years");
 
       const rows = (json.data ?? []) as { year: number }[];
       const options: YearOption[] = rows.map((row) => ({
@@ -173,11 +122,9 @@ export default function CarSearchForm() {
   const handleMakeChange = useCallback(
     async (value: string) => {
       const nextMake = value.trim();
-      const matchedMake = matchOptionValue(nextMake, makes);
-      const resolvedMake = matchedMake ?? nextMake;
+      setSelectedMake(nextMake);
 
-      setSelectedMake(resolvedMake);
-      // Behavior: selecting Make clears Model + Year
+      // Selecting a make resets dependent picks.
       setSelectedModel("");
       setSelectedYear("");
       setModels([]);
@@ -191,26 +138,18 @@ export default function CarSearchForm() {
         return;
       }
 
-      if (!matchedMake) {
-        setIsModelsLoading(false);
-        setIsYearsLoading(false);
-        return;
-      }
-
       setIsYearsLoading(false);
-      await loadModels(matchedMake);
+      await loadModels(nextMake);
     },
-    [loadModels, makes]
+    [loadModels]
   );
 
   const handleModelChange = useCallback(
     async (value: string) => {
       const nextModel = value.trim();
-      const matchedModel = matchOptionValue(nextModel, models);
-      const resolvedModel = matchedModel ?? nextModel;
+      setSelectedModel(nextModel);
 
-      setSelectedModel(resolvedModel);
-      // Behavior: selecting Model clears Year
+      // Selecting a model resets year.
       setSelectedYear("");
       setYears([]);
       setYearsError(null);
@@ -220,30 +159,18 @@ export default function CarSearchForm() {
         return;
       }
 
-      if (!matchedModel) {
-        setIsYearsLoading(false);
-        return;
-      }
-
-      await loadYears(selectedMake, matchedModel);
+      await loadYears(selectedMake, nextModel);
     },
-    [loadYears, models, selectedMake]
+    [loadYears, selectedMake]
   );
 
-  const handleYearChange = useCallback(
-    (value: string) => {
-      const nextYear = value.trim();
-      const matchedYear = matchOptionValue(nextYear, years);
-      setSelectedYear(matchedYear ?? nextYear);
-    },
-    [years]
-  );
+  const handleYearChange = useCallback((value: string) => {
+    setSelectedYear(value);
+  }, []);
 
-  const isValidMake = !!matchOptionValue(selectedMake, makes);
-  const isValidModel = !!matchOptionValue(selectedModel, models);
-  const isValidYear = !!matchOptionValue(selectedYear, years);
-  const matchedSelectedMake = matchOptionValue(selectedMake, makes);
-  const matchedSelectedModel = matchOptionValue(selectedModel, models);
+  const isValidMake = !!selectedMake;
+  const isValidModel = !!selectedModel;
+  const isValidYear = !!selectedYear;
   const isAnyFieldLoading = isMakesLoading || isModelsLoading || isYearsLoading;
   const isModelDisabled = !isValidMake || isModelsLoading;
   const isYearDisabled = !isValidModel || isModelsLoading || isYearsLoading;
@@ -264,17 +191,19 @@ export default function CarSearchForm() {
 
       setIsSubmitting(true);
 
-      const makeSlug = toSlug(selectedMake);
-      const modelSlug = toSlug(selectedModel);
-      const yearValue = selectedYear.trim();
-      router.push(`/cars/${makeSlug}/${modelSlug}/${encodeURIComponent(yearValue)}`);
+      const params = new URLSearchParams({
+        make: selectedMake,
+        model: selectedModel,
+        year: selectedYear,
+      });
+
+      router.push(`/car?${params.toString()}`);
     },
     [canSubmit, router, selectedMake, selectedModel, selectedYear]
   );
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Header */}
       <header className="flex items-center justify-center py-8 border-b border-white/10">
         <div className="flex items-center gap-4">
           <Image
@@ -290,7 +219,6 @@ export default function CarSearchForm() {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="flex-1 flex items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
         <div className="w-full max-w-xl">
           <div className="bg-white/5 border border-white/10 rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-md p-6 sm:p-8 space-y-6">
@@ -305,42 +233,50 @@ export default function CarSearchForm() {
             </div>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
-              {/* Make */}
               <div className="space-y-1.5">
                 <label htmlFor="make" className="text-sm font-medium text-white/90">
                   Make
                 </label>
-                <input
-                  id="make"
-                  name="make"
-                  list="make-options"
-                  className={`block w-full rounded-lg border border-white/15 bg-black/60 px-3 py-2.5 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
-                    isMakesLoading ? "animate-pulse" : ""
-                  }`}
-                  value={selectedMake}
-                  onChange={(e) => void handleMakeChange(e.target.value)}
-                  disabled={isMakesLoading}
-                  placeholder={
-                    isMakesLoading
-                      ? "Loading makes..."
-                      : makesError
-                      ? "Couldn't load makes"
-                      : "Type or select a make"
-                  }
-                  autoComplete="off"
-                />
-                <datalist id="make-options">
-                  {!isMakesLoading &&
-                    !makesError &&
-                    makes.map((make) => (
-                      <option key={make.value} value={make.value}>
-                        {make.label}
-                      </option>
-                    ))}
-                </datalist>
-                {isMakesLoading && (
-                  <p className="text-[11px] text-white/50">Loading...</p>
-                )}
+                <div className="relative">
+                  <select
+                    id="make"
+                    name="make"
+                    className={`block w-full appearance-none rounded-lg border border-white/15 bg-black/60 px-3 py-2.5 pr-10 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                      isMakesLoading ? "animate-pulse" : ""
+                    }`}
+                    value={selectedMake}
+                    onChange={(e) => void handleMakeChange(e.target.value)}
+                    disabled={isMakesLoading}
+                  >
+                    <option value="">
+                      {isMakesLoading
+                        ? "Loading makes..."
+                        : makesError
+                        ? "Couldn't load makes"
+                        : "Select a make"}
+                    </option>
+                    {!isMakesLoading &&
+                      !makesError &&
+                      makes.map((make) => (
+                        <option key={make.value} value={make.value}>
+                          {make.label}
+                        </option>
+                      ))}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-white/75">
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    >
+                      <path d="M5 7.5l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
+                {isMakesLoading && <p className="text-[11px] text-white/50">Loading...</p>}
                 {makesError && !isMakesLoading && (
                   <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                     <p className="text-[11px] text-white/70">{makesError}</p>
@@ -356,45 +292,53 @@ export default function CarSearchForm() {
                 )}
               </div>
 
-              {/* Model */}
               <div className="space-y-1.5">
                 <label htmlFor="model" className="text-sm font-medium text-white/90">
                   Model
                 </label>
-                <input
-                  id="model"
-                  name="model"
-                  list="model-options"
-                  className={`block w-full rounded-lg border border-white/15 bg-black/60 px-3 py-2.5 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
-                    isModelsLoading ? "animate-pulse" : ""
-                  }`}
-                  value={selectedModel}
-                  onChange={(e) => void handleModelChange(e.target.value)}
-                  disabled={isModelDisabled}
-                  placeholder={
-                    !isValidMake
-                      ? "Type/select a valid make first"
-                      : isModelsLoading
-                      ? "Loading models..."
-                      : modelsError
-                      ? "Couldn't load models"
-                      : "Type or select a model"
-                  }
-                  autoComplete="off"
-                />
-                <datalist id="model-options">
-                  {isValidMake &&
-                    !isModelsLoading &&
-                    !modelsError &&
-                    models.map((model) => (
-                      <option key={model.value} value={model.value}>
-                        {model.label}
-                      </option>
-                    ))}
-                </datalist>
-                {isModelsLoading && (
-                  <p className="text-[11px] text-white/50">Loading...</p>
-                )}
+                <div className="relative">
+                  <select
+                    id="model"
+                    name="model"
+                    className={`block w-full appearance-none rounded-lg border border-white/15 bg-black/60 px-3 py-2.5 pr-10 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                      isModelsLoading ? "animate-pulse" : ""
+                    }`}
+                    value={selectedModel}
+                    onChange={(e) => void handleModelChange(e.target.value)}
+                    disabled={isModelDisabled}
+                  >
+                    <option value="">
+                      {!isValidMake
+                        ? "Select a make first"
+                        : isModelsLoading
+                        ? "Loading models..."
+                        : modelsError
+                        ? "Couldn't load models"
+                        : "Select a model"}
+                    </option>
+                    {isValidMake &&
+                      !isModelsLoading &&
+                      !modelsError &&
+                      models.map((model) => (
+                        <option key={model.value} value={model.value}>
+                          {model.label}
+                        </option>
+                      ))}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-white/75">
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    >
+                      <path d="M5 7.5l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
+                {isModelsLoading && <p className="text-[11px] text-white/50">Loading...</p>}
                 {modelsError && !isModelsLoading && (
                   <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                     <p className="text-[11px] text-white/70">{modelsError}</p>
@@ -402,11 +346,9 @@ export default function CarSearchForm() {
                       type="button"
                       className="text-[11px] font-medium text-white/90 underline underline-offset-2 disabled:opacity-50"
                       onClick={() => {
-                        if (matchedSelectedMake) {
-                          void loadModels(matchedSelectedMake);
-                        }
+                        if (selectedMake) void loadModels(selectedMake);
                       }}
-                      disabled={isModelsLoading || !matchedSelectedMake}
+                      disabled={isModelsLoading || !selectedMake}
                     >
                       Try again
                     </button>
@@ -414,45 +356,53 @@ export default function CarSearchForm() {
                 )}
               </div>
 
-              {/* Year */}
               <div className="space-y-1.5">
                 <label htmlFor="year" className="text-sm font-medium text-white/90">
                   Year
                 </label>
-                <input
-                  id="year"
-                  name="year"
-                  list="year-options"
-                  className={`block w-full rounded-lg border border-white/15 bg-black/60 px-3 py-2.5 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
-                    isYearsLoading ? "animate-pulse" : ""
-                  }`}
-                  value={selectedYear}
-                  onChange={(e) => handleYearChange(e.target.value)}
-                  disabled={isYearDisabled}
-                  placeholder={
-                    !isValidModel
-                      ? "Type/select a valid model first"
-                      : isYearsLoading
-                      ? "Loading years..."
-                      : yearsError
-                      ? "Couldn't load years"
-                      : "Type or select a year"
-                  }
-                  autoComplete="off"
-                />
-                <datalist id="year-options">
-                  {isValidModel &&
-                    !isYearsLoading &&
-                    !yearsError &&
-                    years.map((year) => (
-                      <option key={year.value} value={year.value}>
-                        {year.label}
-                      </option>
-                    ))}
-                </datalist>
-                {isYearsLoading && (
-                  <p className="text-[11px] text-white/50">Loading...</p>
-                )}
+                <div className="relative">
+                  <select
+                    id="year"
+                    name="year"
+                    className={`block w-full appearance-none rounded-lg border border-white/15 bg-black/60 px-3 py-2.5 pr-10 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                      isYearsLoading ? "animate-pulse" : ""
+                    }`}
+                    value={selectedYear}
+                    onChange={(e) => handleYearChange(e.target.value)}
+                    disabled={isYearDisabled}
+                  >
+                    <option value="">
+                      {!isValidModel
+                        ? "Select a model first"
+                        : isYearsLoading
+                        ? "Loading years..."
+                        : yearsError
+                        ? "Couldn't load years"
+                        : "Select a year"}
+                    </option>
+                    {isValidModel &&
+                      !isYearsLoading &&
+                      !yearsError &&
+                      years.map((year) => (
+                        <option key={year.value} value={year.value}>
+                          {year.label}
+                        </option>
+                      ))}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-white/75">
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    >
+                      <path d="M5 7.5l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
+                {isYearsLoading && <p className="text-[11px] text-white/50">Loading...</p>}
                 {yearsError && !isYearsLoading && (
                   <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                     <p className="text-[11px] text-white/70">{yearsError}</p>
@@ -460,15 +410,11 @@ export default function CarSearchForm() {
                       type="button"
                       className="text-[11px] font-medium text-white/90 underline underline-offset-2 disabled:opacity-50"
                       onClick={() => {
-                        if (matchedSelectedMake && matchedSelectedModel) {
-                          void loadYears(matchedSelectedMake, matchedSelectedModel);
+                        if (selectedMake && selectedModel) {
+                          void loadYears(selectedMake, selectedModel);
                         }
                       }}
-                      disabled={
-                        isYearsLoading ||
-                        !matchedSelectedMake ||
-                        !matchedSelectedModel
-                      }
+                      disabled={isYearsLoading || !selectedMake || !selectedModel}
                     >
                       Try again
                     </button>
@@ -476,73 +422,29 @@ export default function CarSearchForm() {
                 )}
               </div>
 
-              {/* CTA */}
               <div className="space-y-2 pt-2">
                 <button
                   type="submit"
                   className="inline-flex w-full items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black shadow-lg shadow-white/20 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:ring-white disabled:cursor-not-allowed disabled:bg-white/40 disabled:text-black/60"
                   disabled={!canSubmit}
                 >
-                  {isSubmitting || isAnyFieldLoading
-                    ? "Loading..."
-                    : "Get Buyability Report"}
+                  {isSubmitting || isAnyFieldLoading ? "Loading..." : "Get Buyability Report"}
                 </button>
               </div>
 
-              {/* Helper text + disclaimer */}
               <p className="pt-1 text-[11px] leading-relaxed text-white/60">
                 This tool summarizes patterns from historical repair data,
                 recalls, and ownership reports. It is not a substitute for a
-                professional inspection or your own judgment. Review our{" "}
-                <Link
-                  href="/methodology"
-                  className="underline underline-offset-2 hover:text-white"
-                >
-                  methodology
-                </Link>
-                {" "}and{" "}
-                <Link
+                professional inspection or your own judgment.{" "}
+                <a
                   href="/disclaimer"
                   className="underline underline-offset-2 hover:text-white"
                 >
-                  disclaimer
-                </Link>
+                  Read the full disclaimer
+                </a>
                 .
               </p>
             </form>
-
-            <div className="border-t border-white/10 pt-4 space-y-2">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-white/45">
-                Popular vehicles
-              </p>
-              <div className="flex flex-wrap gap-x-3 gap-y-1.5">
-                {POPULAR_VEHICLES.map((vehicle) => (
-                  <Link
-                    key={vehicle.href}
-                    href={vehicle.href}
-                    className="text-xs text-white/65 underline underline-offset-2 hover:text-white"
-                  >
-                    {vehicle.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-white/50">
-            <Link
-              href="/methodology"
-              className="underline underline-offset-2 hover:text-white"
-            >
-              Methodology
-            </Link>
-            <span aria-hidden="true">•</span>
-            <Link
-              href="/disclaimer"
-              className="underline underline-offset-2 hover:text-white"
-            >
-              Disclaimer
-            </Link>
           </div>
         </div>
       </main>
