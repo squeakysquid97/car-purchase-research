@@ -241,7 +241,7 @@ export default function CarSearchForm() {
                   <select
                     id="make"
                     name="make"
-                    className={`block w-full appearance-none rounded-lg border border-white/15 bg-black/60 px-3 py-2.5 pr-10 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`block w-full appearance-none rounded-lg border border-white/15 bg-black/60 pl-3 pr-10 py-2.5 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
                       isMakesLoading ? "animate-pulse" : ""
                     }`}
                     value={selectedMake}
@@ -263,7 +263,7 @@ export default function CarSearchForm() {
                         </option>
                       ))}
                   </select>
-                  <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-white/75">
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-white/75">
                     <svg
                       aria-hidden="true"
                       viewBox="0 0 20 20"
@@ -300,7 +300,7 @@ export default function CarSearchForm() {
                   <select
                     id="model"
                     name="model"
-                    className={`block w-full appearance-none rounded-lg border border-white/15 bg-black/60 px-3 py-2.5 pr-10 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`block w-full appearance-none rounded-lg border border-white/15 bg-black/60 pl-3 pr-10 py-2.5 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
                       isModelsLoading ? "animate-pulse" : ""
                     }`}
                     value={selectedModel}
@@ -325,7 +325,7 @@ export default function CarSearchForm() {
                         </option>
                       ))}
                   </select>
-                  <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-white/75">
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-white/75">
                     <svg
                       aria-hidden="true"
                       viewBox="0 0 20 20"
@@ -364,7 +364,7 @@ export default function CarSearchForm() {
                   <select
                     id="year"
                     name="year"
-                    className={`block w-full appearance-none rounded-lg border border-white/15 bg-black/60 px-3 py-2.5 pr-10 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`block w-full appearance-none rounded-lg border border-white/15 bg-black/60 pl-3 pr-10 py-2.5 text-sm text-white shadow-sm focus:border-white focus:outline-none focus:ring-1 focus:ring-white disabled:cursor-not-allowed disabled:opacity-60 ${
                       isYearsLoading ? "animate-pulse" : ""
                     }`}
                     value={selectedYear}
@@ -389,7 +389,7 @@ export default function CarSearchForm() {
                         </option>
                       ))}
                   </select>
-                  <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-white/75">
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-white/75">
                     <svg
                       aria-hidden="true"
                       viewBox="0 0 20 20"
