@@ -17,6 +17,7 @@ type VehicleScoreRow = {
 type RepairIssueRow = {
   id: number;
   issue_name: string;
+  source_name: string;
   severity: Severity | null;
   typical_mileage: number | null;
   cost_min: number | null;
@@ -114,6 +115,7 @@ export async function GET(req: NextRequest) {
       repair_issues (
         id,
         issue_name,
+        source_name,
         severity,
         typical_mileage,
         cost_min,
@@ -175,8 +177,13 @@ export async function GET(req: NextRequest) {
     );
 
   const repairIssues = (data.repair_issues ?? []) as RepairIssueRow[];
+  const repairIssuesFromSource = repairIssues.filter(
+    (ri) => ri.source_name === "nhtsa"
+  );
+  const repairsSourceName = "nhtsa";
+  const totalRepairsFromSource = repairIssuesFromSource.length;
 
-  const repairs: RepairItem[] = repairIssues
+  const repairs: RepairItem[] = repairIssuesFromSource
     .map((ri) => ({
       id: ri.id,
       issue_name: ri.issue_name,
@@ -196,7 +203,9 @@ export async function GET(req: NextRequest) {
       const sev = severityRank(b.severity) - severityRank(a.severity);
       if (sev !== 0) return sev;
       return (b.cost_max ?? 0) - (a.cost_max ?? 0);
-    });
+    })
+    .slice(0, 2);
+  const repairsMoreCount = Math.max(totalRepairsFromSource - repairs.length, 0);
 
   // Optional: quick “why” summary (based on top positives/negatives)
   const why = {
@@ -229,6 +238,8 @@ export async function GET(req: NextRequest) {
 
       category_breakdown: categoryBreakdown,
       repairs,
+      repairs_more_count: repairsMoreCount,
+      repairs_source_name: repairsSourceName,
       why,
     },
   });

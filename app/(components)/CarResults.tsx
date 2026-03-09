@@ -47,6 +47,8 @@
    calculated_at: string | null;
    category_breakdown: CategoryBreakdownItem[];
    repairs: RepairItem[];
+   repairs_more_count: number;
+   repairs_source_name: string | null;
    why: {
      strongest: WhyEntry[];
      weakest: WhyEntry[];
@@ -572,7 +574,7 @@ type ErrorKind = "not_found" | "retryable" | null;
                          data.
                        </p>
                      )}
-                     {data.repairs.map((repair) => (
+                   {data.repairs.map((repair) => (
                        <article
                          key={repair.id}
                          className="rounded-xl bg-black/40 border border-white/5 px-3 py-3 text-xs sm:text-sm space-y-2"
@@ -615,6 +617,12 @@ type ErrorKind = "not_found" | "retryable" | null;
                          )}
                        </article>
                      ))}
+                    {data.repairs_more_count > 0 && (
+                      <p className="text-xs text-white/60">
+                        And {data.repairs_more_count} more issues from{" "}
+                        {data.repairs_source_name ?? "unknown source"}
+                      </p>
+                    )}
                    </div>
                  </section>
                </div>

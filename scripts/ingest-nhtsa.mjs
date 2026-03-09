@@ -2,16 +2,16 @@ import { createClient } from '@supabase/supabase-js';
 
 // Curated list of popular makes for better signal coverage.
 const TARGET_MAKES = [
-  // 'TOYOTA',
-  'HONDA',
-  'FORD',
-  'CHEVROLET',
-  'NISSAN',
-  'JEEP',
-  'HYUNDAI',
-  'KIA',
-  'SUBARU',
-  'BMW',
+  'TOYOTA',
+  // 'HONDA',
+  // 'FORD',
+  // 'CHEVROLET',
+  // 'NISSAN',
+  // 'JEEP',
+  // 'HYUNDAI',
+  // 'KIA',
+  // 'SUBARU',
+  // 'BMW',
 ];
 
 // Temporary test scope toggle. Set ENABLED=false to revert to full run.
@@ -588,6 +588,7 @@ function buildRepairIssueRow(vehicleYearId, bucket) {
   return {
     vehicle_year_id: vehicleYearId,
     issue_name: issueName,
+    source_name: 'nhtsa',
     severity,
     typical_mileage: typicalMileage,
     complaint_count: bucket.kind === 'complaint' ? bucketCount : 0,
