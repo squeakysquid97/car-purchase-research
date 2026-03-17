@@ -30,8 +30,8 @@ export default function MethodologyPage() {
               What Buyability Means
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/70">
-              My first car cost $500. It was a 1995 Honda Accord, and it barely worked. I remember once, I was having difficulty slowing down at stop signs, suggesting a potential issue with the brakes. So, I took the car to a local brake shop (as one does) and was confronted with a $500 estimate to replace the pads and turn the rotors. I didn't have $500, so I took it home and replaced the brakes myself (it took me all day). Since then, I have been interested in what makes a car worth the money, and how I could translate that into something others could use to make good decisions when purchasing a vehicle. 
-              "Buyability" is a score that attempts to quantify how much value a car is for the money. It is calculated based on a variety of factors, including the car's durability, reliability, and repair costs. Use this score to guide you in your car buying journey, and I hope it can help make that journey a little less frought with peril.
+              My first car cost $500. It was a 1995 Honda Accord, and it barely worked. I remember once, I was having difficulty slowing down at stop signs, suggesting a potential issue with the brakes. So, I took the car to a local brake shop (as one does) and was confronted with a $500 estimate to replace the pads and turn the rotors. I didn&apos;t have $500, so I took it home and replaced the brakes myself (it took me all day). Since then, I have been interested in what makes a car worth the money, and how I could translate that into something others could use to make good decisions when purchasing a vehicle. 
+              &ldquo;Buyability&rdquo; is a score that attempts to quantify how much value a car is for the money. It is calculated based on a variety of factors, including the car&apos;s durability, reliability, and repair costs. Use this score to guide you in your car buying journey, and I hope it can help make that journey a little less frought with peril.
             </p>
           </section>
 
