@@ -48,6 +48,8 @@ type RepairItem = {
   description: string | null;
 };
 
+const MAX_DISPLAY_REPAIRS_FROM_NHTSA = 4;
+
 function severityRank(s?: Severity | null) {
   switch (s) {
     case "catastrophic":
@@ -204,7 +206,7 @@ export async function GET(req: NextRequest) {
       if (sev !== 0) return sev;
       return (b.cost_max ?? 0) - (a.cost_max ?? 0);
     })
-    .slice(0, 2);
+    .slice(0, MAX_DISPLAY_REPAIRS_FROM_NHTSA);
   const repairsMoreCount = Math.max(totalRepairsFromSource - repairs.length, 0);
 
   // Optional: quick “why” summary (based on top positives/negatives)

@@ -3,22 +3,22 @@ import { createClient } from '@supabase/supabase-js';
 // Curated list of popular makes for better signal coverage.
 const TARGET_MAKES = [
   'TOYOTA',
-  // 'HONDA',
-  // 'FORD',
-  // 'CHEVROLET',
-  // 'NISSAN',
-  // 'JEEP',
-  // 'HYUNDAI',
-  // 'KIA',
-  // 'SUBARU',
-  // 'BMW',
+  'HONDA',
+  'FORD',
+  'CHEVROLET',
+  'NISSAN',
+  'JEEP',
+  'HYUNDAI',
+  'KIA',
+  'SUBARU',
+  'BMW',
 ];
 
 // Temporary test scope toggle. Set ENABLED=false to revert to full run.
 const TEST_SCOPE = {
   ENABLED: false,
   MAKE: 'TOYOTA',
-  MODEL: 'COROLLA',
+  MODEL: 'Corolla',
   YEAR: 2008,
 };
 
@@ -285,12 +285,70 @@ function getComplaintMileage(item) {
   return Math.round(numeric);
 }
 
+function safeInt(value) {
+  const numeric = Number.parseInt(String(value ?? '').replace(/[^0-9]/g, ''), 10);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 function median(values) {
   if (!values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   if (sorted.length % 2 === 1) return sorted[mid];
   return Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
+function extractMileage(text) {
+  const clean = String(text ?? '');
+  if (!clean) return [];
+
+  const matches = [];
+  const regexes = [
+    /\b(\d{1,3}(?:,\d{3})+|\d{4,6})\s*miles?\b/gi,
+    /\b(?:at|around|about|approx(?:imately)?)\s*(\d{2,3})\s*k\b(?:\s*miles?)?/gi,
+    /\b(\d{2,3})\s*k\b(?:\s*miles?)?/gi,
+  ];
+
+  for (const regex of regexes) {
+    for (const match of clean.matchAll(regex)) {
+      const raw = match[1];
+      let miles = safeInt(raw);
+      if (miles === null) continue;
+      if (/k\b/i.test(match[0])) miles *= 1000;
+      if (miles < 100 || miles > 500000) continue;
+      matches.push(miles);
+    }
+  }
+
+  return matches;
+}
+
+function extractRepairCosts(text) {
+  const clean = String(text ?? '');
+  if (!clean) return [];
+
+  const matches = [];
+  const regex = /\$\s*(\d{2,3}(?:,\d{3})+|\d{2,5})\b/g;
+
+  for (const match of clean.matchAll(regex)) {
+    const amount = safeInt(match[1]);
+    if (amount === null || amount < 50 || amount > 25000) continue;
+    matches.push(amount);
+  }
+
+  return matches;
+}
+
+function getComplaintNarrative(item) {
+  return [
+    item?.summary ?? '',
+    item?.Summary ?? '',
+    item?.complaint_summary ?? '',
+    item?.narrative ?? '',
+    item?.Narrative ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
 function toSentences(text, maxChars = 180) {
@@ -583,7 +641,17 @@ function buildRepairIssueRow(vehicleYearId, bucket) {
 
   const mileageValues =
     bucket.kind === 'complaint' ? bucket.items.map(getComplaintMileage).filter((v) => v !== null) : [];
-  const typicalMileage = mileageValues.length ? median(mileageValues) : null;
+  const narrativeMileageValues =
+    bucket.kind === 'complaint'
+      ? bucket.items.flatMap((item) => extractMileage(getComplaintNarrative(item)))
+      : [];
+  const typicalMileage = median([...mileageValues, ...narrativeMileageValues]);
+  const costValues =
+    bucket.kind === 'complaint'
+      ? bucket.items.flatMap((item) => extractRepairCosts(getComplaintNarrative(item)))
+      : [];
+  const costMin = costValues.length ? Math.min(...costValues) : null;
+  const costMax = costValues.length ? Math.max(...costValues) : null;
 
   return {
     vehicle_year_id: vehicleYearId,
@@ -593,8 +661,8 @@ function buildRepairIssueRow(vehicleYearId, bucket) {
     typical_mileage: typicalMileage,
     complaint_count: bucket.kind === 'complaint' ? bucketCount : 0,
     recall_count: bucket.kind === 'recall' ? bucketCount : 0,
-    cost_min: null,
-    cost_max: null,
+    cost_min: costMin,
+    cost_max: costMax,
     failure_rate_estimate: null,
     description,
     is_systemic: bucket.kind === 'recall' || bucketCount >= 100,
@@ -611,9 +679,10 @@ async function insertRepairIssues(vehicleYearId, recallsResults, complaintsResul
 
     const { data: existing, error: readError } = await supabase
       .from('repair_issues')
-      .select('id,cost_min,cost_max,failure_rate_estimate')
+      .select('id,typical_mileage,cost_min,cost_max,failure_rate_estimate')
       .eq('vehicle_year_id', vehicleYearId)
       .eq('issue_name', row.issue_name)
+      .eq('source_name', 'nhtsa')
       .limit(1);
 
     if (readError) {
@@ -621,6 +690,18 @@ async function insertRepairIssues(vehicleYearId, recallsResults, complaintsResul
     }
 
     const existingRow = existing && existing.length > 0 ? existing[0] : null;
+    if (existingRow) {
+      if (row.typical_mileage === null && existingRow.typical_mileage !== null) {
+        row.typical_mileage = existingRow.typical_mileage;
+      }
+      if (row.cost_min === null && existingRow.cost_min !== null) {
+        row.cost_min = existingRow.cost_min;
+      }
+      if (row.cost_max === null && existingRow.cost_max !== null) {
+        row.cost_max = existingRow.cost_max;
+      }
+    }
+
     const hasCuratedFields =
       existingRow &&
       (existingRow.cost_min !== null ||
@@ -634,7 +715,7 @@ async function insertRepairIssues(vehicleYearId, recallsResults, complaintsResul
 
     const { error: upsertError } = await supabase
       .from('repair_issues')
-      .upsert([row], { onConflict: 'vehicle_year_id,issue_name' });
+      .upsert([row], { onConflict: 'vehicle_year_id,issue_name,source_name' });
     if (upsertError) {
       throw new Error(
         `Upsert repair_issues failed (${vehicleYearId}/${row.issue_name}): ${upsertError.message}`
@@ -792,7 +873,7 @@ async function runSingleVehicleMode() {
       .filter((name, idx, arr) => arr.indexOf(name) === idx)
       .filter((name) => {
         if (!TEST_SCOPE.ENABLED) return true;
-        return name.toUpperCase() === TEST_SCOPE.MODEL;
+        return name.toUpperCase() === TEST_SCOPE.MODEL.toUpperCase();
       })
       .slice(0, MAX_MODELS_PER_MAKE);
     console.log(`Found ${models.length} models for ${makeName} (limited to ${MAX_MODELS_PER_MAKE}).`);
