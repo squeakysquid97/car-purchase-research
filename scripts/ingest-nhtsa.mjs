@@ -2,16 +2,17 @@ import { createClient } from '@supabase/supabase-js';
 
 // Curated list of popular makes for better signal coverage.
 const TARGET_MAKES = [
-  'TOYOTA',
-  'HONDA',
-  'FORD',
-  'CHEVROLET',
-  'NISSAN',
-  'JEEP',
-  'HYUNDAI',
-  'KIA',
-  'SUBARU',
-  'BMW',
+  // 'TOYOTA',
+  // 'HONDA',
+  // 'FORD',
+  // 'CHEVROLET',
+  // 'NISSAN',
+  // 'JEEP',
+  // 'HYUNDAI',
+  // 'KIA',
+  // 'SUBARU',
+  // 'BMW',
+  'DODGE',
 ];
 
 // Temporary test scope toggle. Set ENABLED=false to revert to full run.
