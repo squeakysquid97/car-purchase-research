@@ -1,24 +1,83 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-export default function MethodologyPage() {
-  return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="border-b border-white/10 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">
-            Car Purchase Research
-          </p>
-          <Link
-            href="/"
-            className="text-xs font-medium text-white/70 underline underline-offset-4 hover:text-white"
-          >
-            Back to search
-          </Link>
-        </div>
-      </header>
+import { SITE_NAME, buildAbsoluteUrl } from "../seo";
 
-      <main className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl space-y-6">
+export const metadata: Metadata = {
+  title: "Scoring Methodology",
+  description:
+    "Learn how Car Purchase Research calculates buyability scores using durability, failure risk, repair frequency, ownership cost, and recall stability.",
+  alternates: {
+    canonical: "/methodology",
+  },
+  openGraph: {
+    type: "article",
+    title: `Scoring Methodology | ${SITE_NAME}`,
+    description:
+      "Learn how Car Purchase Research calculates buyability scores using durability, failure risk, repair frequency, ownership cost, and recall stability.",
+    url: "/methodology",
+    siteName: SITE_NAME,
+  },
+  twitter: {
+    card: "summary",
+    title: `Scoring Methodology | ${SITE_NAME}`,
+    description:
+      "Learn how Car Purchase Research calculates buyability scores using durability, failure risk, repair frequency, ownership cost, and recall stability.",
+  },
+};
+
+export default function MethodologyPage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        name: `Scoring Methodology | ${SITE_NAME}`,
+        description:
+          "Learn how Car Purchase Research calculates buyability scores using durability, failure risk, repair frequency, ownership cost, and recall stability.",
+        url: buildAbsoluteUrl("/methodology"),
+      },
+      {
+        "@type": "Article",
+        headline: "Scoring Methodology",
+        description:
+          "Explanation of how buyability scores are calculated from durability, failure risk, repair trends, ownership cost, and recall stability.",
+        author: {
+          "@type": "Organization",
+          name: SITE_NAME,
+        },
+        publisher: {
+          "@type": "Organization",
+          name: SITE_NAME,
+        },
+        mainEntityOfPage: buildAbsoluteUrl("/methodology"),
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="min-h-screen bg-black text-white">
+        <header className="border-b border-white/10 px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
+            <p className="text-xs uppercase tracking-[0.2em] text-white/50">
+              Car Purchase Research
+            </p>
+            <Link
+              href="/"
+              className="text-xs font-medium text-white/70 underline underline-offset-4 hover:text-white"
+            >
+              Back to search
+            </Link>
+          </div>
+        </header>
+
+        <main className="px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-5xl space-y-6">
           <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-6 sm:p-8">
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               Scoring Methodology
@@ -202,7 +261,8 @@ export default function MethodologyPage() {
             </p>
           </section>
         </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }

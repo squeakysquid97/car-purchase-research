@@ -1,24 +1,83 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-export default function DisclaimerPage() {
-  return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="border-b border-white/10 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">
-            Car Purchase Research
-          </p>
-          <Link
-            href="/"
-            className="text-xs font-medium text-white/70 underline underline-offset-4 hover:text-white"
-          >
-            Back to search
-          </Link>
-        </div>
-      </header>
+import { SITE_NAME, buildAbsoluteUrl } from "../seo";
 
-      <main className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl space-y-6">
+export const metadata: Metadata = {
+  title: "Disclaimer",
+  description:
+    "Read the Car Purchase Research disclaimer covering informational use, data limitations, and the need for independent vehicle inspections.",
+  alternates: {
+    canonical: "/disclaimer",
+  },
+  openGraph: {
+    type: "article",
+    title: `Disclaimer | ${SITE_NAME}`,
+    description:
+      "Read the Car Purchase Research disclaimer covering informational use, data limitations, and the need for independent vehicle inspections.",
+    url: "/disclaimer",
+    siteName: SITE_NAME,
+  },
+  twitter: {
+    card: "summary",
+    title: `Disclaimer | ${SITE_NAME}`,
+    description:
+      "Read the Car Purchase Research disclaimer covering informational use, data limitations, and the need for independent vehicle inspections.",
+  },
+};
+
+export default function DisclaimerPage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        name: `Disclaimer | ${SITE_NAME}`,
+        description:
+          "Read the Car Purchase Research disclaimer covering informational use, data limitations, and the need for independent vehicle inspections.",
+        url: buildAbsoluteUrl("/disclaimer"),
+      },
+      {
+        "@type": "Article",
+        headline: "Disclaimer",
+        description:
+          "Informational-use disclaimer for Car Purchase Research, including limits of the data and score interpretation.",
+        author: {
+          "@type": "Organization",
+          name: SITE_NAME,
+        },
+        publisher: {
+          "@type": "Organization",
+          name: SITE_NAME,
+        },
+        mainEntityOfPage: buildAbsoluteUrl("/disclaimer"),
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="min-h-screen bg-black text-white">
+        <header className="border-b border-white/10 px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
+            <p className="text-xs uppercase tracking-[0.2em] text-white/50">
+              Car Purchase Research
+            </p>
+            <Link
+              href="/"
+              className="text-xs font-medium text-white/70 underline underline-offset-4 hover:text-white"
+            >
+              Back to search
+            </Link>
+          </div>
+        </header>
+
+        <main className="px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-5xl space-y-6">
           <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-6 sm:p-8">
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               Disclaimer
@@ -79,7 +138,8 @@ export default function DisclaimerPage() {
             inspection and your own judgment.
           </footer>
         </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }
