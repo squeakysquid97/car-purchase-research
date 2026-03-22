@@ -19,16 +19,16 @@ const TARGET_MAKES = [
 const TEST_SCOPE = {
   ENABLED: false,
   VEHICLES: [
-    { MAKE: 'Toyota', MODEL: 'Camry', YEAR: 2011 },
-    { MAKE: 'Honda', MODEL: 'CR-V', YEAR: 2014 },
-    { MAKE: 'Mazda', MODEL: 'Mazda3', YEAR: 2012 },
-    { MAKE: 'Subaru', MODEL: 'Outback', YEAR: 2015 },
-    { MAKE: 'Chevrolet', MODEL: 'Malibu', YEAR: 2013 },
-    { MAKE: 'Jeep', MODEL: 'Grand Cherokee', YEAR: 2014 },
-    { MAKE: 'Volkswagen', MODEL: 'Jetta', YEAR: 2012 },
-    { MAKE: 'BMW', MODEL: '328i', YEAR: 2011 },
-   { MAKE: 'Hyundai', MODEL: 'Sonata', YEAR: 2013 },
-    { MAKE: 'Kia', MODEL: 'Sorento', YEAR: 2015 },
+    { MAKE: 'Ford', MODEL: 'F-150', YEAR: 2015 },
+  //   { MAKE: 'Honda', MODEL: 'CR-V', YEAR: 2014 },
+  //   { MAKE: 'Mazda', MODEL: 'Mazda3', YEAR: 2012 },
+  //   { MAKE: 'Subaru', MODEL: 'Outback', YEAR: 2015 },
+  //   { MAKE: 'Chevrolet', MODEL: 'Malibu', YEAR: 2013 },
+  //   { MAKE: 'Jeep', MODEL: 'Grand Cherokee', YEAR: 2014 },
+  //   { MAKE: 'Volkswagen', MODEL: 'Jetta', YEAR: 2012 },
+  //   { MAKE: 'BMW', MODEL: '328i', YEAR: 2011 },
+  //  { MAKE: 'Hyundai', MODEL: 'Sonata', YEAR: 2013 },
+  //   { MAKE: 'Kia', MODEL: 'Sorento', YEAR: 2015 },
   ],
 };
 
@@ -47,8 +47,8 @@ const COMPLAINTS_URL = (make, model, year) =>
   )}&model=${encodeURIComponent(model)}&modelYear=${year}`;
 
 const MAX_MODELS_PER_MAKE = 20;
-const START_YEAR = 2018;
-const END_YEAR = 2024;
+const START_YEAR = 2007;
+const END_YEAR = 2017;
 const REQUEST_DELAY_MS = 200;
 const PROGRESS_EVERY = 100;
 const MAX_ISSUES_PER_VEHICLE_YEAR = 10;

@@ -34,15 +34,8 @@ export default function Home() {
         "@type": "WebSite",
         name: SITE_NAME,
         url: buildAbsoluteUrl("/"),
-        potentialAction: {
-          "@type": "SearchAction",
-          target: `${buildAbsoluteUrl("/car")}?make={make}&model={model}&year={year}`,
-          "query-input": [
-            "required name=make",
-            "required name=model",
-            "required name=year",
-          ],
-        },
+        description:
+          "Search used cars by make, model, and year to review buyability scores, repair-risk categories, recall patterns, and complaint signals.",
       },
       {
         "@type": "WebPage",

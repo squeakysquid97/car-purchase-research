@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import CarResults from "../../../../(components)/CarResults";
+import { SITE_NAME, buildAbsoluteUrl, getBaseUrl } from "../../../../seo";
 
 type CarSlugParams = {
   make: string;
@@ -13,6 +14,9 @@ type CarSlugPageProps = {
 };
 
 type CarApiMetadataData = {
+  make: string | null;
+  model: string | null;
+  year: number;
   final_score: number | null;
   score_label: string | null;
 };
@@ -22,33 +26,23 @@ type CarApiMetadataResponse =
   | { ok: false; error: string };
 
 type ScoreSummary = {
+  make: string | null;
+  model: string | null;
+  year: number | null;
   finalScore: number | null;
   scoreLabel: string | null;
 };
 
-function decodeSegment(segment: string): string {
+function decodeRouteSegment(segment: string): string {
   try {
-    return decodeURIComponent(segment).replace(/-/g, " ").trim();
+    return decodeURIComponent(segment).trim();
   } catch {
-    return segment.replace(/-/g, " ").trim();
+    return segment.trim();
   }
 }
 
-function getBaseUrl(): string {
-  const configuredBase =
-    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL ?? "";
-
-  if (configuredBase) {
-    return configuredBase.startsWith("http")
-      ? configuredBase.replace(/\/$/, "")
-      : `https://${configuredBase.replace(/\/$/, "")}`;
-  }
-
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  return "http://localhost:3000";
+function humanizeSegment(segment: string): string {
+  return decodeRouteSegment(segment).replace(/-/g, " ").trim();
 }
 
 function getCanonicalPath(params: CarSlugParams): string {
@@ -56,27 +50,46 @@ function getCanonicalPath(params: CarSlugParams): string {
 }
 
 async function getScoreSummary(
-  make: string,
-  model: string,
+  makeSlug: string,
+  modelSlug: string,
   year: string,
   baseUrl: string
 ): Promise<ScoreSummary> {
   try {
-    const qs = new URLSearchParams({ make, model, year }).toString();
+    const qs = new URLSearchParams({
+      makeSlug,
+      modelSlug,
+      year,
+    }).toString();
     const res = await fetch(`${baseUrl}/api/car?${qs}`, {
       next: { revalidate: 3600 },
     });
 
     if (!res.ok) {
-      return { finalScore: null, scoreLabel: null };
+      return {
+        make: null,
+        model: null,
+        year: null,
+        finalScore: null,
+        scoreLabel: null,
+      };
     }
 
     const json = (await res.json()) as CarApiMetadataResponse;
     if (!json.ok) {
-      return { finalScore: null, scoreLabel: null };
+      return {
+        make: null,
+        model: null,
+        year: null,
+        finalScore: null,
+        scoreLabel: null,
+      };
     }
 
     return {
+      make: json.data.make,
+      model: json.data.model,
+      year: json.data.year,
       finalScore:
         json.data.final_score != null
           ? Math.max(0, Math.min(100, Number(json.data.final_score)))
@@ -84,7 +97,13 @@ async function getScoreSummary(
       scoreLabel: json.data.score_label,
     };
   } catch {
-    return { finalScore: null, scoreLabel: null };
+    return {
+      make: null,
+      model: null,
+      year: null,
+      finalScore: null,
+      scoreLabel: null,
+    };
   }
 }
 
@@ -103,21 +122,26 @@ export async function generateMetadata({
 }: CarSlugPageProps): Promise<Metadata> {
   const routeParams = await params;
 
-  const decodedMake = decodeSegment(routeParams.make);
-  const decodedModel = decodeSegment(routeParams.model);
-  const decodedYear = decodeSegment(routeParams.year);
-  const vehicleName = `${decodedYear} ${decodedMake} ${decodedModel}`.trim();
+  const makeSlug = decodeRouteSegment(routeParams.make);
+  const modelSlug = decodeRouteSegment(routeParams.model);
+  const fallbackMake = humanizeSegment(routeParams.make);
+  const fallbackModel = humanizeSegment(routeParams.model);
+  const fallbackYear = decodeRouteSegment(routeParams.year);
 
   const baseUrl = getBaseUrl();
   const canonicalPath = getCanonicalPath(routeParams);
-  const canonicalUrl = `${baseUrl}${canonicalPath}`;
+  const canonicalUrl = buildAbsoluteUrl(canonicalPath);
 
-  const { finalScore, scoreLabel } = await getScoreSummary(
-    decodedMake,
-    decodedModel,
-    decodedYear,
+  const { make, model, year, finalScore, scoreLabel } = await getScoreSummary(
+    makeSlug,
+    modelSlug,
+    fallbackYear,
     baseUrl
   );
+  const vehicleMake = make ?? fallbackMake;
+  const vehicleModel = model ?? fallbackModel;
+  const vehicleYear = year != null ? String(year) : fallbackYear;
+  const vehicleName = `${vehicleYear} ${vehicleMake} ${vehicleModel}`.trim();
 
   const title = `${vehicleName} Buyability Score`;
   const description = buildDescription(vehicleName, finalScore, scoreLabel);
@@ -134,7 +158,7 @@ export async function generateMetadata({
       url: canonicalUrl,
       title,
       description,
-      siteName: "Car Purchase Research",
+      siteName: SITE_NAME,
     },
     twitter: {
       card: "summary",
@@ -146,19 +170,24 @@ export async function generateMetadata({
 
 export default async function CarSlugPage({ params }: CarSlugPageProps) {
   const routeParams = await params;
-  const decodedMake = decodeSegment(routeParams.make);
-  const decodedModel = decodeSegment(routeParams.model);
-  const decodedYear = decodeSegment(routeParams.year);
-  const vehicleName = `${decodedYear} ${decodedMake} ${decodedModel}`.trim();
+  const makeSlug = decodeRouteSegment(routeParams.make);
+  const modelSlug = decodeRouteSegment(routeParams.model);
+  const fallbackMake = humanizeSegment(routeParams.make);
+  const fallbackModel = humanizeSegment(routeParams.model);
+  const fallbackYear = decodeRouteSegment(routeParams.year);
   const baseUrl = getBaseUrl();
   const canonicalPath = getCanonicalPath(routeParams);
-  const canonicalUrl = `${baseUrl}${canonicalPath}`;
-  const { finalScore, scoreLabel } = await getScoreSummary(
-    decodedMake,
-    decodedModel,
-    decodedYear,
+  const canonicalUrl = buildAbsoluteUrl(canonicalPath);
+  const { make, model, year, finalScore, scoreLabel } = await getScoreSummary(
+    makeSlug,
+    modelSlug,
+    fallbackYear,
     baseUrl
   );
+  const vehicleMake = make ?? fallbackMake;
+  const vehicleModel = model ?? fallbackModel;
+  const vehicleYear = year != null ? String(year) : fallbackYear;
+  const vehicleName = `${vehicleYear} ${vehicleMake} ${vehicleModel}`.trim();
   const description = buildDescription(vehicleName, finalScore, scoreLabel);
 
   const jsonLd = {
@@ -173,17 +202,17 @@ export default async function CarSlugPage({ params }: CarSlugPageProps) {
       {
         "@type": "Vehicle",
         name: vehicleName,
-        model: decodedModel,
+        model: vehicleModel,
         brand: {
           "@type": "Brand",
-          name: decodedMake,
+          name: vehicleMake,
         },
         description,
         additionalProperty: [
           {
             "@type": "PropertyValue",
             name: "Model Year",
-            value: decodedYear,
+            value: vehicleYear,
           },
           {
             "@type": "PropertyValue",
@@ -213,7 +242,13 @@ export default async function CarSlugPage({ params }: CarSlugPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd }}
       />
-      <CarResults make={decodedMake} model={decodedModel} year={decodedYear} />
+      <CarResults
+        make={fallbackMake}
+        model={fallbackModel}
+        year={fallbackYear}
+        makeSlug={makeSlug}
+        modelSlug={modelSlug}
+      />
     </>
   );
 }

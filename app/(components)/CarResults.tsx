@@ -71,6 +71,8 @@ interface CarResultsProps {
   make: string;
   model: string;
   year: string;
+  makeSlug?: string;
+  modelSlug?: string;
 }
 
 type ErrorKind = "not_found" | "retryable" | null;
@@ -126,7 +128,13 @@ type ErrorKind = "not_found" | "retryable" | null;
    }
  }
 
- export default function CarResults({ make, model, year }: CarResultsProps) {
+ export default function CarResults({
+   make,
+   model,
+   year,
+   makeSlug,
+   modelSlug,
+ }: CarResultsProps) {
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
    const [errorKind, setErrorKind] = useState<ErrorKind>(null);
@@ -151,7 +159,14 @@ type ErrorKind = "not_found" | "retryable" | null;
 
      const load = async () => {
        try {
-         const params = new URLSearchParams({ make, model, year });
+         const params = new URLSearchParams({ year });
+         if (makeSlug && modelSlug) {
+           params.set("makeSlug", makeSlug);
+           params.set("modelSlug", modelSlug);
+         } else {
+           params.set("make", make);
+           params.set("model", model);
+         }
          const res = await fetch(`/api/car?${params.toString()}`, {
            signal: controller.signal,
          });
@@ -197,11 +212,11 @@ type ErrorKind = "not_found" | "retryable" | null;
      void load();
 
      return () => controller.abort();
-   }, [make, model, retryCount, year]);
+   }, [make, makeSlug, model, modelSlug, retryCount, year]);
 
-   const titleMake = make || data?.make || "Vehicle";
-   const titleModel = model || data?.model || "";
-   const titleYear = year || (data?.year ? String(data.year) : "");
+   const titleMake = data?.make || make || "Vehicle";
+   const titleModel = data?.model || model || "";
+   const titleYear = data?.year ? String(data.year) : year || "";
    const buyabilityTheme = getBuyabilityTheme(data?.score_label ?? null);
    const finalScore =
      data?.final_score != null

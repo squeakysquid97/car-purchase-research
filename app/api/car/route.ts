@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 type Severity = "low" | "medium" | "high" | "catastrophic";
+
+type MakeRow = {
+  name: string | null;
+};
+
+type ModelRow = {
+  name: string | null;
+  makes: MakeRow | MakeRow[] | null;
+};
+
+type VehicleLookupRow = {
+  id: number;
+  models: ModelRow | ModelRow[] | null;
+};
 
 type VehicleScoreRow = {
   scoring_category_id: number | null;
@@ -50,6 +64,69 @@ type RepairItem = {
 
 const MAX_DISPLAY_REPAIRS_FROM_NHTSA = 4;
 
+function getFirst<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
+function normalizeSlugSegment(value: string) {
+  try {
+    return decodeURIComponent(value).trim().toLowerCase();
+  } catch {
+    return value.trim().toLowerCase();
+  }
+}
+
+function toVehicleSlug(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
+async function resolveVehicleYearIdFromSlug(
+  supabase: SupabaseClient,
+  year: number,
+  makeSlug: string,
+  modelSlug: string
+) {
+  const normalizedMakeSlug = normalizeSlugSegment(makeSlug);
+  const normalizedModelSlug = normalizeSlugSegment(modelSlug);
+
+  const { data, error } = await supabase
+    .from("vehicle_years")
+    .select(
+      `
+      id,
+      models!inner (
+        name,
+        makes!inner ( name )
+      )
+    `
+    )
+    .eq("year", year);
+
+  if (error || !data) {
+    return { vehicleYearId: null, error };
+  }
+
+  const matchingRow = (data as VehicleLookupRow[]).find((row) => {
+    const modelRow = getFirst(row.models);
+    const makeRow = getFirst(modelRow?.makes);
+
+    if (!modelRow?.name || !makeRow?.name) {
+      return false;
+    }
+
+    return (
+      toVehicleSlug(makeRow.name) === normalizedMakeSlug &&
+      toVehicleSlug(modelRow.name) === normalizedModelSlug
+    );
+  });
+
+  return {
+    vehicleYearId: matchingRow?.id ?? null,
+    error: null,
+  };
+}
+
 function severityRank(s?: Severity | null) {
   switch (s) {
     case "catastrophic":
@@ -70,11 +147,23 @@ export async function GET(req: NextRequest) {
 
   const make = searchParams.get("make");
   const model = searchParams.get("model");
+  const makeSlug = searchParams.get("makeSlug");
+  const modelSlug = searchParams.get("modelSlug");
   const year = searchParams.get("year");
+  const hasNameLookup = Boolean(make && model);
+  const hasSlugLookup = Boolean(makeSlug && modelSlug);
 
-  if (!make || !model || !year) {
+  if (!year || (!hasNameLookup && !hasSlugLookup)) {
     return NextResponse.json(
-      { ok: false, error: "Missing make, model, or year" },
+      { ok: false, error: "Missing vehicle lookup fields" },
+      { status: 400 }
+    );
+  }
+
+  const numericYear = Number(year);
+  if (Number.isNaN(numericYear)) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid year" },
       { status: 400 }
     );
   }
@@ -84,7 +173,34 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { data, error } = await supabase
+  let resolvedVehicleYearId: number | null = null;
+  if (hasSlugLookup && makeSlug && modelSlug) {
+    const { vehicleYearId, error: lookupError } =
+      await resolveVehicleYearIdFromSlug(
+        supabase,
+        numericYear,
+        makeSlug,
+        modelSlug
+      );
+
+    if (lookupError) {
+      return NextResponse.json(
+        { ok: false, error: "Vehicle lookup failed" },
+        { status: 500 }
+      );
+    }
+
+    if (vehicleYearId == null) {
+      return NextResponse.json(
+        { ok: false, error: "Vehicle not found" },
+        { status: 404 }
+      );
+    }
+
+    resolvedVehicleYearId = vehicleYearId;
+  }
+
+  let vehicleQuery = supabase
     .from("vehicle_years")
     .select(
       `
@@ -127,11 +243,18 @@ export async function GET(req: NextRequest) {
         description
       )
     `
-    )
-    .eq("year", Number(year))
-    .ilike("models.name", model)
-    .ilike("models.makes.name", make)
-    .single();
+    );
+
+  if (resolvedVehicleYearId != null) {
+    vehicleQuery = vehicleQuery.eq("id", resolvedVehicleYearId);
+  } else {
+    vehicleQuery = vehicleQuery
+      .eq("year", numericYear)
+      .ilike("models.name", model!)
+      .ilike("models.makes.name", make!);
+  }
+
+  const { data, error } = await vehicleQuery.single();
 
   if (error || !data) {
     return NextResponse.json(
@@ -142,12 +265,8 @@ export async function GET(req: NextRequest) {
 
   // Depending on relationship cardinality/config, Supabase can return
   // nested relations as either objects or arrays.
-  const modelRow = Array.isArray(data.models) ? data.models[0] : data.models;
-  const makeRow = modelRow?.makes
-    ? Array.isArray(modelRow.makes)
-      ? modelRow.makes[0]
-      : modelRow.makes
-    : null;
+  const modelRow = getFirst(data.models);
+  const makeRow = getFirst(modelRow?.makes);
   const final = Array.isArray(data.vehicle_final_scores)
     ? data.vehicle_final_scores[0]
     : data.vehicle_final_scores;
