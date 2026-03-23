@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-// import { Analytics } from "@vercel/analytics/react";
+import { SITE_NAME, getBaseUrl } from "./seo";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,8 +16,31 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Car Purchase Research",
-  description: "Fix your car FAST!",
+  metadataBase: new URL(getBaseUrl()),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description:
+    "Research used cars by make, model, and year with buyability scores, complaint patterns, recall history, and repair-risk context.",
+  applicationName: SITE_NAME,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    title: SITE_NAME,
+    description:
+      "Research used cars by make, model, and year with buyability scores, complaint patterns, recall history, and repair-risk context.",
+    siteName: SITE_NAME,
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description:
+      "Research used cars by make, model, and year with buyability scores, complaint patterns, recall history, and repair-risk context.",
+  },
 };
 
 export default function RootLayout({
@@ -30,7 +54,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-        {/* <Analytics /> */}
+        <Analytics />
       </body>
     </html>
   );
