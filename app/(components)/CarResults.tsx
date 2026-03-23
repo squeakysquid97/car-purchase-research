@@ -128,14 +128,16 @@ type ErrorKind = "not_found" | "retryable" | null;
    }
  }
 
- export default function CarResults({
-   make,
-   model,
-   year,
-   makeSlug,
-   modelSlug,
- }: CarResultsProps) {
-   const [loading, setLoading] = useState(false);
+export default function CarResults({
+  make,
+  model,
+  year,
+  makeSlug,
+  modelSlug,
+}: CarResultsProps) {
+   const hasVehicleQuery = Boolean(make && model && year);
+
+   const [loading, setLoading] = useState(hasVehicleQuery);
    const [error, setError] = useState<string | null>(null);
    const [errorKind, setErrorKind] = useState<ErrorKind>(null);
    const [data, setData] = useState<CarData | null>(null);
@@ -144,11 +146,12 @@ type ErrorKind = "not_found" | "retryable" | null;
 
    useEffect(() => {
      if (!make || !model || !year) {
-       setError("Choose a make, model, and year to view a report.");
-       setErrorKind("retryable");
-       setData(null);
-       return;
-     }
+        setLoading(false);
+        setError("Choose a make, model, and year to view a report.");
+        setErrorKind("retryable");
+        setData(null);
+        return;
+      }
 
      setLoading(true);
      setError(null);
@@ -217,6 +220,13 @@ type ErrorKind = "not_found" | "retryable" | null;
    const titleMake = data?.make || make || "Vehicle";
    const titleModel = data?.model || model || "";
    const titleYear = data?.year ? String(data.year) : year || "";
+   const vehicleHeadingParts = [
+     titleYear,
+     titleMake !== "Vehicle" ? titleMake : "",
+     titleModel,
+   ].filter(Boolean);
+   const vehicleHeading = vehicleHeadingParts.join(" ");
+   const hasVehicleIdentity = vehicleHeadingParts.length > 0;
    const buyabilityTheme = getBuyabilityTheme(data?.score_label ?? null);
    const finalScore =
      data?.final_score != null
@@ -315,106 +325,127 @@ type ErrorKind = "not_found" | "retryable" | null;
              </div>
            )}
 
-           {data && (
-             <>
-               {/* Score + label hero */}
-               <section
-                 className={`rounded-2xl border bg-gradient-to-br p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 ${buyabilityTheme.panel}`}
-               >
-                 <div>
-                   <p className="text-xs uppercase tracking-[0.25em] text-white/60">
-                     Overall buyability
-                   </p>
-                   <h1 className="mt-2 text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight flex items-baseline gap-3">
-                     {finalScore != null ? (
-                       <>
-                         <span>{finalScore.toFixed(1)}</span>
-                         <span className="text-base font-normal text-white/60">
-                           / 100
-                         </span>
-                       </>
-                     ) : (
-                       <span className="text-2xl">No score available</span>
-                     )}
-                   </h1>
-                   {data.score_label && (
-                     <p
-                       className={`mt-1 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${buyabilityTheme.badge}`}
-                     >
-                       {data.score_label}
+           {hasVehicleIdentity && (
+             <section
+               className={`rounded-2xl border bg-gradient-to-br p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 ${buyabilityTheme.panel}`}
+             >
+               <div>
+                 <p className="text-xs uppercase tracking-[0.25em] text-white/60">
+                   Vehicle report
+                 </p>
+                 <h1 className="mt-2 text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight">
+                   {vehicleHeading}
+                 </h1>
+                 <p className="mt-5 text-xs uppercase tracking-[0.25em] text-white/60">
+                   Overall buyability
+                 </p>
+                 <div className="mt-2 flex items-baseline gap-3">
+                   {loading && !data && !error ? (
+                     <p className="text-2xl font-semibold tracking-tight text-white/90">
+                       Loading score...
                      </p>
-                   )}
-                   {finalScore != null && (
-                     <div className="mt-4 max-w-xl">
-                        <div className="relative pt-5">
-                          <div
-                            role="progressbar"
-                            aria-label={`Buyability score ${finalScore.toFixed(1)} out of 100`}
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                            aria-valuenow={Number(finalScore.toFixed(1))}
-                            className="relative h-2 overflow-hidden rounded-full bg-white/15"
-                          >
-                            <div
-                              className="h-full rounded-full bg-white/80 transition-[width] duration-700 ease-out"
-                              style={{ width: `${animatedScore}%` }}
-                            />
-                            {SCORE_TIERS.map((tier, index) => {
-                              if (
-                                index === 0 ||
-                                index === SCORE_TIERS.length - 1
-                              ) {
-                                return null;
-                              }
-
-                              const rawPosition =
-                                (index / (SCORE_TIERS.length - 1)) * 100;
-                              const position =
-                                rawPosition === 0
-                                  ? 0.5
-                                  : rawPosition === 100
-                                  ? 99.5
-                                  : rawPosition;
-
-                              return (
-                                <span
-                                  key={`tick-${tier.label}`}
-                                  className="absolute top-0 z-10 h-2 w-px bg-black/50 shadow-[0_0_0_1px_rgba(255,255,255,0.2)]"
-                                  style={{ left: `${position}%` }}
-                                  aria-hidden="true"
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between text-[10px]">
-                          <span
-                            className={
-                              isAvoidLabel
-                                ? "text-white/90 font-medium"
-                                : "text-white/60"
-                            }
-                          >
-                            Avoid
-                          </span>
-                          <span
-                            className={
-                              isKeeperLabel
-                                ? "text-white/90 font-medium"
-                                : "text-white/60"
-                            }
-                          >
-                            Long-Term Keeper
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                   {data.summary_text && (
-                     <p className="mt-4 text-sm text-white/80 max-w-xl">
-                       {data.summary_text}
+                   ) : finalScore != null ? (
+                     <>
+                       <p className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight">
+                         {finalScore.toFixed(1)}
+                       </p>
+                       <span className="text-base font-normal text-white/60">
+                         / 100
+                       </span>
+                     </>
+                   ) : data ? (
+                     <p className="text-2xl font-semibold tracking-tight text-white/90">
+                       No score available
                      </p>
-                   )}
+                   ) : errorKind === "not_found" ? (
+                     <p className="text-2xl font-semibold tracking-tight text-white/90">
+                       Report unavailable
+                     </p>
+                   ) : error ? (
+                     <p className="text-2xl font-semibold tracking-tight text-white/90">
+                       Unable to load score
+                     </p>
+                   ) : null}
                  </div>
+                 {data?.score_label && (
+                   <p
+                     className={`mt-1 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${buyabilityTheme.badge}`}
+                   >
+                     {data.score_label}
+                   </p>
+                 )}
+                 {finalScore != null && (
+                   <div className="mt-4 max-w-xl">
+                     <div className="relative pt-5">
+                       <div
+                         role="progressbar"
+                         aria-label={`Buyability score ${finalScore.toFixed(1)} out of 100`}
+                         aria-valuemin={0}
+                         aria-valuemax={100}
+                         aria-valuenow={Number(finalScore.toFixed(1))}
+                         className="relative h-2 overflow-hidden rounded-full bg-white/15"
+                       >
+                         <div
+                           className="h-full rounded-full bg-white/80 transition-[width] duration-700 ease-out"
+                           style={{ width: `${animatedScore}%` }}
+                         />
+                         {SCORE_TIERS.map((tier, index) => {
+                           if (
+                             index === 0 ||
+                             index === SCORE_TIERS.length - 1
+                           ) {
+                             return null;
+                           }
+
+                           const rawPosition =
+                             (index / (SCORE_TIERS.length - 1)) * 100;
+                           const position =
+                             rawPosition === 0
+                               ? 0.5
+                               : rawPosition === 100
+                               ? 99.5
+                               : rawPosition;
+
+                           return (
+                             <span
+                               key={`tick-${tier.label}`}
+                               className="absolute top-0 z-10 h-2 w-px bg-black/50 shadow-[0_0_0_1px_rgba(255,255,255,0.2)]"
+                               style={{ left: `${position}%` }}
+                               aria-hidden="true"
+                             />
+                           );
+                         })}
+                       </div>
+                     </div>
+                     <div className="mt-2 flex items-center justify-between text-[10px]">
+                       <span
+                         className={
+                           isAvoidLabel
+                             ? "text-white/90 font-medium"
+                             : "text-white/60"
+                         }
+                       >
+                         Avoid
+                       </span>
+                       <span
+                         className={
+                           isKeeperLabel
+                             ? "text-white/90 font-medium"
+                             : "text-white/60"
+                         }
+                       >
+                         Long-Term Keeper
+                       </span>
+                     </div>
+                   </div>
+                 )}
+                 {data?.summary_text && (
+                   <p className="mt-4 text-sm text-white/80 max-w-xl">
+                     {data.summary_text}
+                   </p>
+                 )}
+               </div>
+               {data && (
                  <div className="flex flex-col items-start sm:items-end gap-2 text-xs text-white/70">
                    {data.ownership_cost_category && (
                      <p>
@@ -439,9 +470,12 @@ type ErrorKind = "not_found" | "retryable" | null;
                      </p>
                    )}
                  </div>
-               </section>
+               )}
+             </section>
+           )}
 
-               <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+           {data && (
+             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
                  {/* Breakdown + Why */}
                  <div className="space-y-6">
                    {/* Breakdown (category list) */}
@@ -641,8 +675,7 @@ type ErrorKind = "not_found" | "retryable" | null;
                    </div>
                  </section>
                </div>
-             </>
-           )}
+            )}
 
           <p className="pt-2 text-[11px] leading-relaxed text-white/50">
             This report is based on aggregated repair records, recalls, and
