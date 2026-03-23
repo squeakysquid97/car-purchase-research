@@ -17,23 +17,70 @@ const TARGET_MAKES = [
 
 // Temporary test scope toggle. Set ENABLED=false to revert to full run.
 const TEST_SCOPE = {
-  ENABLED: false,
+  ENABLED: process.env.NHTSA_TEST_SCOPE === 'true',
   VEHICLES: [
-    { MAKE: 'Ford', MODEL: 'F-150', YEAR: 2015 },
-  //   { MAKE: 'Honda', MODEL: 'CR-V', YEAR: 2014 },
-  //   { MAKE: 'Mazda', MODEL: 'Mazda3', YEAR: 2012 },
-  //   { MAKE: 'Subaru', MODEL: 'Outback', YEAR: 2015 },
-  //   { MAKE: 'Chevrolet', MODEL: 'Malibu', YEAR: 2013 },
-  //   { MAKE: 'Jeep', MODEL: 'Grand Cherokee', YEAR: 2014 },
-  //   { MAKE: 'Volkswagen', MODEL: 'Jetta', YEAR: 2012 },
-  //   { MAKE: 'BMW', MODEL: '328i', YEAR: 2011 },
-  //  { MAKE: 'Hyundai', MODEL: 'Sonata', YEAR: 2013 },
-  //   { MAKE: 'Kia', MODEL: 'Sorento', YEAR: 2015 },
+    { MAKE: 'Toyota', MODEL: 'Sienna', YEAR: 2021 },
+    { MAKE: 'Toyota', MODEL: 'Sienna', YEAR: 2023 },
+    { MAKE: 'Toyota', MODEL: 'Sienna', YEAR: 2024 },
+    { MAKE: 'Ford', MODEL: 'E-150', YEAR: 2023 },
+    { MAKE: 'Ford', MODEL: 'F-250', YEAR: 2020 },
+    { MAKE: 'Ford', MODEL: 'F-750', YEAR: 2018 },
+    { MAKE: 'Chevrolet', MODEL: 'Express', YEAR: 2020 },
+    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2019 },
+    { MAKE: 'Nissan', MODEL: '370Z', YEAR: 2019 },
+    { MAKE: 'Nissan', MODEL: 'Frontier', YEAR: 2023 },
+    { MAKE: 'Nissan', MODEL: 'NV', YEAR: 2018 },
+    { MAKE: 'Nissan', MODEL: 'NV', YEAR: 2019 },
+    { MAKE: 'Nissan', MODEL: 'Maxima', YEAR: 2023 },
+    { MAKE: 'Kia', MODEL: 'Cadenza', YEAR: 2020 },
+    { MAKE: 'Subaru', MODEL: 'BRZ', YEAR: 2020 },
+    { MAKE: 'Subaru', MODEL: 'BRZ', YEAR: 2024 },
+    { MAKE: 'BMW', MODEL: '740Li', YEAR: 2019 },
+    { MAKE: 'BMW', MODEL: '750Li', YEAR: 2019 },
+    { MAKE: 'Toyota', MODEL: 'Land Cruiser', YEAR: 2007 },
+    { MAKE: 'Toyota', MODEL: 'FJ Cruiser', YEAR: 2015 },
+    { MAKE: 'Honda', MODEL: 'CTX1300', YEAR: 2014 },
+    { MAKE: 'Honda', MODEL: 'NC700X', YEAR: 2013 },
+    { MAKE: 'Ford', MODEL: 'Ranger', YEAR: 2014 },
+    { MAKE: 'Ford', MODEL: 'Ranger', YEAR: 2016 },
+    { MAKE: 'Ford', MODEL: 'F-350', YEAR: 2015 },
+    { MAKE: 'Ford', MODEL: 'F-450', YEAR: 2007 },
+    { MAKE: 'Ford', MODEL: 'F-450', YEAR: 2008 },
+    { MAKE: 'Ford', MODEL: 'F-550', YEAR: 2007 },
+    { MAKE: 'Ford', MODEL: 'F-550', YEAR: 2008 },
+    { MAKE: 'Ford', MODEL: 'F-650', YEAR: 2007 },
+    { MAKE: 'Ford', MODEL: 'F-650', YEAR: 2012 },
+    { MAKE: 'Ford', MODEL: 'F-650', YEAR: 2016 },
+    { MAKE: 'Ford', MODEL: 'F-750', YEAR: 2012 },
+    { MAKE: 'Chevrolet', MODEL: 'Aveo', YEAR: 2012 },
+    { MAKE: 'Chevrolet', MODEL: 'Sonic', YEAR: 2011 },
+    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2011 },
+    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2013 },
+    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2015 },
+    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2016 },
+    { MAKE: 'Nissan', MODEL: 'Rogue', YEAR: 2007 },
+    { MAKE: 'Nissan', MODEL: 'Armada', YEAR: 2016 },
+    { MAKE: 'Hyundai', MODEL: 'Genesis', YEAR: 2008 },
+    { MAKE: 'Kia', MODEL: 'Borrego', YEAR: 2008 },
+    { MAKE: 'Kia', MODEL: 'Sedona', YEAR: 2013 },
+    { MAKE: 'BMW', MODEL: '128i', YEAR: 2007 },
+    { MAKE: 'BMW', MODEL: '740i', YEAR: 2014 },
+    { MAKE: 'BMW', MODEL: '740i', YEAR: 2015 },
+    { MAKE: 'BMW', MODEL: '750i', YEAR: 2015 },
+    { MAKE: 'BMW', MODEL: '750xi', YEAR: 2013 },
+    { MAKE: 'BMW', MODEL: '750xi', YEAR: 2014 },
+    { MAKE: 'BMW', MODEL: '750xi', YEAR: 2015 },
+    { MAKE: 'BMW', MODEL: '750xi', YEAR: 2016 },
   ],
 };
 
-const MODE = 'single_vehicle'; // 'single_vehicle' | 'queued_batch'
+const MODE = process.env.NHTSA_MODE === 'queued_batch' ? 'queued_batch' : 'single_vehicle'; // 'single_vehicle' | 'queued_batch'
 const MAX_VEHICLE_YEARS_PER_RUN = 25;
+const ZERO_ISSUE_BACKFILL_SCOPE = {
+  ENABLED: process.env.NHTSA_ZERO_ISSUE_BACKFILL === 'true',
+  LIMIT: parsePositiveInteger(process.env.NHTSA_ZERO_ISSUE_BACKFILL_LIMIT, MAX_VEHICLE_YEARS_PER_RUN),
+  LOOKAHEAD_MULTIPLIER: 5,
+};
 
 const VPIC_MODELS_BY_MAKE_URL = (makeName) =>
   `https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${encodeURIComponent(makeName)}?format=json`;
@@ -167,6 +214,12 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let failedRequests = 0;
+let handledEmptyNon2xxResponses = 0;
+
+function parsePositiveInteger(value, fallback) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 function normalizeVehicleToken(value) {
   return String(value ?? '')
@@ -187,6 +240,13 @@ function normalizeModelForDb(value) {
   return normalizeVehicleToken(value);
 }
 
+function hasExplicitEmptyResults(payload) {
+  if (!payload || typeof payload !== 'object') return false;
+  if (Array.isArray(payload.results)) return payload.results.length === 0;
+  if (Array.isArray(payload.Results)) return payload.Results.length === 0;
+  return false;
+}
+
 async function safeGetJson(url, method = 'GET') {
   await sleep(REQUEST_DELAY_MS);
 
@@ -198,30 +258,52 @@ async function safeGetJson(url, method = 'GET') {
 
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      failedRequests += 1;
-      console.error(
-        `[safeGetJson] method=${method} url=${url} status=${res.status} error=${res.statusText} body=${body.slice(
-          0,
-          200
-        )}`
-      );
+      let parsed = null;
 
-      // NHTSA endpoints sometimes return non-2xx with a valid results payload.
       try {
-        const parsed = JSON.parse(body);
-        if (parsed && typeof parsed === 'object') return parsed;
+        parsed = JSON.parse(body);
       } catch {
         // ignore parse errors
       }
 
+      const parsedResults = extractResults(parsed);
+      if (hasExplicitEmptyResults(parsed)) {
+        handledEmptyNon2xxResponses += 1;
+        console.warn(
+          `[safeGetJson] classification=handled_empty_non_2xx method=${method} url=${url} status=${res.status} results=0`
+        );
+        return parsed;
+      }
+
+      if (parsed && parsedResults.length > 0) {
+        console.warn(
+          `[safeGetJson] classification=non_2xx_with_results method=${method} url=${url} status=${res.status} results=${parsedResults.length}`
+        );
+        return parsed;
+      }
+
+      failedRequests += 1;
+      console.error(
+        `[safeGetJson] classification=hard_failure method=${method} url=${url} status=${res.status} error=${res.statusText} body=${body.slice(
+          0,
+          200
+        )}`
+      );
       return null;
     }
 
-    return await res.json();
+    const payload = await res.json();
+    const results = extractResults(payload);
+    if (results.length > 0) {
+      console.log(
+        `[safeGetJson] classification=ok_with_results method=${method} url=${url} status=${res.status} results=${results.length}`
+      );
+    }
+    return payload;
   } catch (err) {
     failedRequests += 1;
     console.error(
-      `[safeGetJson] method=${method} url=${url} status=n/a error=${err?.message ?? String(err)}`
+      `[safeGetJson] classification=hard_failure method=${method} url=${url} status=n/a error=${err?.message ?? String(err)}`
     );
     return null;
   }
@@ -1334,19 +1416,25 @@ function classifyConsideration(recallCount, complaintCount) {
   };
 }
 
-function buildIssueBuckets(recallsResults, complaintsResults, { forDisplay = false } = {}) {
+function buildIssueBucketsFromCollections(recallGroups, complaintClusters, { forDisplay = false } = {}) {
   const bucketMap = new Map();
 
-  for (const recallGroup of groupRecalls(recallsResults, { forDisplay })) {
+  for (const recallGroup of recallGroups) {
     bucketMap.set(`recall::${recallGroup.familyKey}`, recallGroup);
   }
 
-  for (const cluster of clusterComplaints(complaintsResults, { forDisplay })) {
+  for (const cluster of complaintClusters) {
     bucketMap.set(`complaint::${cluster.clusterKey}`, cluster);
   }
 
   const buckets = [...bucketMap.values()].sort((a, b) => b.items.length - a.items.length);
   return forDisplay ? buckets.slice(0, MAX_ISSUES_PER_VEHICLE_YEAR) : buckets;
+}
+
+function buildIssueBuckets(recallsResults, complaintsResults, { forDisplay = false } = {}) {
+  const recallGroups = groupRecalls(recallsResults, { forDisplay });
+  const complaintClusters = clusterComplaints(complaintsResults, { forDisplay });
+  return buildIssueBucketsFromCollections(recallGroups, complaintClusters, { forDisplay });
 }
 
 async function upsertMake(makeName) {
@@ -1533,79 +1621,271 @@ function buildRepairIssueRow(vehicleYearId, bucket) {
   };
 }
 
+function buildRepairIssueCandidates(vehicleYearId, buckets) {
+  return buckets
+    .map((bucket) => {
+      const row = buildRepairIssueRow(vehicleYearId, bucket);
+      if (!row) return null;
+      return { row, bucket, reason: bucket.kind };
+    })
+    .filter(Boolean);
+}
+
+function buildFallbackComplaintIssueRow(vehicleYearId, complaintsResults) {
+  const complaintCount = complaintsResults.length;
+  if (complaintCount <= 0) return null;
+
+  const mileageValues = complaintsResults.map(getComplaintMileage).filter((value) => value !== null);
+  const narrativeMileageValues = complaintsResults.flatMap((item) => extractMileage(getComplaintNarrative(item)));
+  const typicalMileage = median([...mileageValues, ...narrativeMileageValues]);
+  const costValues = complaintsResults.flatMap((item) => extractRepairCosts(getComplaintNarrative(item)));
+  const costMin = costValues.length ? Math.min(...costValues) : null;
+  const costMax = costValues.length ? Math.max(...costValues) : null;
+
+  return {
+    vehicle_year_id: vehicleYearId,
+    issue_name: 'Low-volume complaint pattern (NHTSA)',
+    source_name: 'nhtsa',
+    severity: complaintCount >= 5 ? 'medium' : 'low',
+    typical_mileage: typicalMileage,
+    complaint_count: complaintCount,
+    recall_count: 0,
+    cost_min: costMin,
+    cost_max: costMax,
+    failure_rate_estimate: null,
+    description: `Raw NHTSA complaints were present (${complaintCount}), but no complaint cluster produced a retained issue row under the current clustering thresholds, so a fallback issue was created to preserve completeness.`,
+    is_systemic: false,
+  };
+}
+
+function buildFallbackRecallIssueRow(vehicleYearId, recallsResults, recallGroups) {
+  const recallCount = recallsResults.length;
+  if (recallCount <= 0) return null;
+
+  const severity = recallGroups.some((group) => classifyRecallSeverity(group) === 'catastrophic')
+    ? 'catastrophic'
+    : 'high';
+
+  return {
+    vehicle_year_id: vehicleYearId,
+    issue_name: 'Recall: General safety risk (NHTSA)',
+    source_name: 'nhtsa',
+    severity,
+    typical_mileage: null,
+    complaint_count: 0,
+    recall_count: recallCount,
+    cost_min: null,
+    cost_max: null,
+    failure_rate_estimate: null,
+    description: `NHTSA recalls were present (${recallCount}), but no specific recall issue row survived grouping, so a fallback recall issue was created to preserve completeness.`,
+    is_systemic: false,
+  };
+}
+
+function buildFallbackRepairIssueCandidates(
+  vehicleYearId,
+  recallsResults,
+  complaintsResults,
+  recallGroups,
+  { needsComplaintCoverage = false, needsRecallCoverage = false } = {}
+) {
+  const candidates = [];
+
+  if (complaintsResults.length > 0 && needsComplaintCoverage) {
+    const row = buildFallbackComplaintIssueRow(vehicleYearId, complaintsResults);
+    if (row) candidates.push({ row, bucket: null, reason: 'fallback-complaint' });
+  }
+
+  if (recallsResults.length > 0 && needsRecallCoverage) {
+    const row = buildFallbackRecallIssueRow(vehicleYearId, recallsResults, recallGroups);
+    if (row) candidates.push({ row, bucket: null, reason: 'fallback-recall' });
+  }
+
+  return candidates;
+}
+
+async function fetchRepairIssueCoverage(vehicleYearId) {
+  const { data, error } = await supabase
+    .from('repair_issues')
+    .select('complaint_count,recall_count')
+    .eq('vehicle_year_id', vehicleYearId)
+    .eq('source_name', 'nhtsa');
+
+  if (error) {
+    throw new Error(`Read repair_issues coverage failed (${vehicleYearId}): ${error.message}`);
+  }
+
+  const rows = data ?? [];
+  return {
+    complaintIssueRows: rows.filter((row) => Number(row?.complaint_count ?? 0) > 0).length,
+    recallIssueRows: rows.filter((row) => Number(row?.recall_count ?? 0) > 0).length,
+  };
+}
+
+async function upsertRepairIssueRow(vehicleYearId, row, bucket = null) {
+  if (bucket && row.issue_name.toLowerCase().includes('general')) {
+    console.log('[debug-general-row-before-upsert]', {
+      vehicleYearId,
+      issueName: row.issue_name,
+      severity: row.severity,
+      complaintCount: row.complaint_count,
+      recallCount: row.recall_count,
+      sourceName: row.source_name,
+      bucketKind: bucket.kind,
+      bucketComponent: bucket.component,
+      bucketSymptom: bucket.symptom,
+      bucketClusterKey: bucket.clusterKey,
+    });
+  }
+
+  const { data: existing, error: readError } = await supabase
+    .from('repair_issues')
+    .select('id,typical_mileage,cost_min,cost_max,failure_rate_estimate')
+    .eq('vehicle_year_id', vehicleYearId)
+    .eq('issue_name', row.issue_name)
+    .eq('source_name', 'nhtsa')
+    .limit(1);
+
+  if (readError) {
+    throw new Error(`Read repair_issues failed (${vehicleYearId}/${row.issue_name}): ${readError.message}`);
+  }
+
+  const existingRow = existing && existing.length > 0 ? existing[0] : null;
+  if (existingRow) {
+    if (row.typical_mileage === null && existingRow.typical_mileage !== null) {
+      row.typical_mileage = existingRow.typical_mileage;
+    }
+    if (row.cost_min === null && existingRow.cost_min !== null) {
+      row.cost_min = existingRow.cost_min;
+    }
+    if (row.cost_max === null && existingRow.cost_max !== null) {
+      row.cost_max = existingRow.cost_max;
+    }
+  }
+
+  const hasCuratedFields =
+    existingRow &&
+    (existingRow.cost_min !== null ||
+      existingRow.cost_max !== null ||
+      existingRow.failure_rate_estimate !== null);
+
+  if (hasCuratedFields) {
+    return {
+      upserted: 0,
+      skippedProtected: 1,
+      complaintIssueRowsUpserted: 0,
+      recallIssueRowsUpserted: 0,
+    };
+  }
+
+  const { error: upsertError } = await supabase
+    .from('repair_issues')
+    .upsert([row], { onConflict: 'vehicle_year_id,issue_name,source_name' });
+  if (upsertError) {
+    throw new Error(`Upsert repair_issues failed (${vehicleYearId}/${row.issue_name}): ${upsertError.message}`);
+  }
+
+  return {
+    upserted: 1,
+    skippedProtected: 0,
+    complaintIssueRowsUpserted: row.complaint_count > 0 ? 1 : 0,
+    recallIssueRowsUpserted: row.recall_count > 0 ? 1 : 0,
+  };
+}
+
 async function insertRepairIssues(vehicleYearId, recallsResults, complaintsResults) {
-  const buckets = buildIssueBuckets(recallsResults, complaintsResults, { forDisplay: false });
+  const recallGroups = groupRecalls(recallsResults, { forDisplay: false });
+  const complaintClusters = clusterComplaints(complaintsResults, { forDisplay: false });
+  const buckets = buildIssueBucketsFromCollections(recallGroups, complaintClusters, { forDisplay: false });
+  const issueCandidates = buildRepairIssueCandidates(vehicleYearId, buckets);
+  const complaintIssueCandidateCount = issueCandidates.filter(({ row }) => row.complaint_count > 0).length;
+  const recallIssueCandidateCount = issueCandidates.filter(({ row }) => row.recall_count > 0).length;
+
+  console.log(
+    `[repair-issues] vehicle_year_id ${vehicleYearId} recall_groups=${recallGroups.length} complaint_clusters=${complaintClusters.length} recall_issue_candidates=${recallIssueCandidateCount} complaint_issue_candidates=${complaintIssueCandidateCount}`
+  );
+
   await deleteExistingNhtsaRepairIssues(vehicleYearId);
   let upserted = 0;
   let skippedProtected = 0;
+  let complaintIssueRowsUpserted = 0;
+  let recallIssueRowsUpserted = 0;
+  let fallbackComplaintCreated = false;
+  let fallbackRecallCreated = false;
 
-  for (const bucket of buckets) {
-    const row = buildRepairIssueRow(vehicleYearId, bucket);
-    if (!row) continue;
-
-    if (row.issue_name.toLowerCase().includes('general')) {
-      console.log('[debug-general-row-before-upsert]', {
-        vehicleYearId,
-        issueName: row.issue_name,
-        severity: row.severity,
-        complaintCount: row.complaint_count,
-        recallCount: row.recall_count,
-        sourceName: row.source_name,
-        bucketKind: bucket.kind,
-        bucketComponent: bucket.component,
-        bucketSymptom: bucket.symptom,
-        bucketClusterKey: bucket.clusterKey,
-      });
-    }
-
-    const { data: existing, error: readError } = await supabase
-      .from('repair_issues')
-      .select('id,typical_mileage,cost_min,cost_max,failure_rate_estimate')
-      .eq('vehicle_year_id', vehicleYearId)
-      .eq('issue_name', row.issue_name)
-      .eq('source_name', 'nhtsa')
-      .limit(1);
-
-    if (readError) {
-      throw new Error(`Read repair_issues failed (${vehicleYearId}/${row.issue_name}): ${readError.message}`);
-    }
-
-    const existingRow = existing && existing.length > 0 ? existing[0] : null;
-    if (existingRow) {
-      if (row.typical_mileage === null && existingRow.typical_mileage !== null) {
-        row.typical_mileage = existingRow.typical_mileage;
-      }
-      if (row.cost_min === null && existingRow.cost_min !== null) {
-        row.cost_min = existingRow.cost_min;
-      }
-      if (row.cost_max === null && existingRow.cost_max !== null) {
-        row.cost_max = existingRow.cost_max;
-      }
-    }
-
-    const hasCuratedFields =
-      existingRow &&
-      (existingRow.cost_min !== null ||
-        existingRow.cost_max !== null ||
-        existingRow.failure_rate_estimate !== null);
-
-    if (hasCuratedFields) {
-      skippedProtected += 1;
-      continue;
-    }
-
-    const { error: upsertError } = await supabase
-      .from('repair_issues')
-      .upsert([row], { onConflict: 'vehicle_year_id,issue_name,source_name' });
-    if (upsertError) {
-      throw new Error(
-        `Upsert repair_issues failed (${vehicleYearId}/${row.issue_name}): ${upsertError.message}`
-      );
-    }
-    upserted += 1;
+  for (const candidate of issueCandidates) {
+    const result = await upsertRepairIssueRow(vehicleYearId, candidate.row, candidate.bucket);
+    upserted += result.upserted;
+    skippedProtected += result.skippedProtected;
+    complaintIssueRowsUpserted += result.complaintIssueRowsUpserted;
+    recallIssueRowsUpserted += result.recallIssueRowsUpserted;
   }
 
-  return { upserted, skippedProtected };
+  let coverage = await fetchRepairIssueCoverage(vehicleYearId);
+  const missingComplaintCoverage = complaintsResults.length > 0 && coverage.complaintIssueRows === 0;
+  const missingRecallCoverage = recallsResults.length > 0 && coverage.recallIssueRows === 0;
+
+  if (missingComplaintCoverage || missingRecallCoverage) {
+    console.warn(
+      `[repair-issues] coverage_gap vehicle_year_id ${vehicleYearId} complaint_count=${complaintsResults.length} recall_count=${recallsResults.length} missing_complaint_coverage=${missingComplaintCoverage} missing_recall_coverage=${missingRecallCoverage}`
+    );
+
+    const guardrailCandidates = buildFallbackRepairIssueCandidates(
+      vehicleYearId,
+      recallsResults,
+      complaintsResults,
+      recallGroups,
+      {
+        needsComplaintCoverage: missingComplaintCoverage,
+        needsRecallCoverage: missingRecallCoverage,
+      }
+    );
+
+    for (const candidate of guardrailCandidates) {
+      if (candidate.reason === 'fallback-complaint') {
+        console.log(
+          `[repair-issues] vehicle_year_id ${vehicleYearId} created fallback complaint issue complaint_count=${candidate.row.complaint_count}`
+        );
+      }
+
+      if (candidate.reason === 'fallback-recall') {
+        console.log(
+          `[repair-issues] vehicle_year_id ${vehicleYearId} created fallback recall issue recall_count=${candidate.row.recall_count} severity=${candidate.row.severity}`
+        );
+      }
+
+      const result = await upsertRepairIssueRow(vehicleYearId, candidate.row, candidate.bucket);
+      upserted += result.upserted;
+      skippedProtected += result.skippedProtected;
+      complaintIssueRowsUpserted += result.complaintIssueRowsUpserted;
+      recallIssueRowsUpserted += result.recallIssueRowsUpserted;
+      if (candidate.reason === 'fallback-complaint' && result.upserted > 0) fallbackComplaintCreated = true;
+      if (candidate.reason === 'fallback-recall' && result.upserted > 0) fallbackRecallCreated = true;
+    }
+  }
+
+  coverage = await fetchRepairIssueCoverage(vehicleYearId);
+  const hasComplaintCoverage = complaintsResults.length === 0 || coverage.complaintIssueRows > 0;
+  const hasRecallCoverage = recallsResults.length === 0 || coverage.recallIssueRows > 0;
+
+  if (!hasComplaintCoverage || !hasRecallCoverage) {
+    throw new Error(
+      `Repair issue completeness invariant failed (${vehicleYearId}): complaint_count=${complaintsResults.length} recall_count=${recallsResults.length} complaint_issue_rows=${coverage.complaintIssueRows} recall_issue_rows=${coverage.recallIssueRows}`
+    );
+  }
+
+  console.log(
+    `[repair-issues] vehicle_year_id ${vehicleYearId} final_rows_upserted=${upserted} skipped_protected=${skippedProtected} complaint_issue_rows_upserted=${complaintIssueRowsUpserted} recall_issue_rows_upserted=${recallIssueRowsUpserted} fallback_complaint_created=${fallbackComplaintCreated} fallback_recall_created=${fallbackRecallCreated}`
+  );
+
+  return {
+    upserted,
+    skippedProtected,
+    complaintIssueRowsUpserted,
+    recallIssueRowsUpserted,
+    fallbackComplaintCreated,
+    fallbackRecallCreated,
+  };
 }
 
 function addDays(date, days) {
@@ -1722,6 +2002,78 @@ async function fetchDueVehicleYears(limit) {
     .filter((row) => row.vehicleYearId && row.makeName && row.modelName && row.year);
 }
 
+async function fetchZeroIssueBackfillVehicleYears(limit) {
+  const rows = [];
+  const seenVehicleYearIds = new Set();
+  const pageSize = Math.max(limit * ZERO_ISSUE_BACKFILL_SCOPE.LOOKAHEAD_MULTIPLIER, limit);
+  let offset = 0;
+
+  while (rows.length < limit) {
+    const { data, error } = await supabase
+      .from('vehicle_years')
+      .select(
+        `
+        id,
+        year,
+        total_complaints,
+        total_recalls,
+        models!inner (
+          name,
+          makes!inner ( name )
+        )
+      `
+      )
+      .or('total_complaints.gt.0,total_recalls.gt.0')
+      .order('id', { ascending: true })
+      .range(offset, offset + pageSize - 1);
+
+    if (error) {
+      throw new Error(`Fetch zero-issue backfill vehicle_years failed: ${error.message}`);
+    }
+
+    const page = (data ?? [])
+      .map((row) => {
+        const modelRow = firstRow(row.models);
+        const makeRow = firstRow(modelRow?.makes);
+        return {
+          vehicleYearId: row.id,
+          year: row.year,
+          makeName: makeRow?.name ?? null,
+          modelName: modelRow?.name ?? null,
+          totalComplaints: Number(row.total_complaints ?? 0),
+          totalRecalls: Number(row.total_recalls ?? 0),
+        };
+      })
+      .filter((row) => row.vehicleYearId && row.makeName && row.modelName && row.year);
+
+    if (page.length === 0) break;
+
+    const vehicleYearIds = page.map((row) => row.vehicleYearId);
+    const { data: existingIssues, error: issuesError } = await supabase
+      .from('repair_issues')
+      .select('vehicle_year_id')
+      .eq('source_name', 'nhtsa')
+      .in('vehicle_year_id', vehicleYearIds);
+
+    if (issuesError) {
+      throw new Error(`Fetch zero-issue backfill repair_issues failed: ${issuesError.message}`);
+    }
+
+    const coveredVehicleYearIds = new Set((existingIssues ?? []).map((row) => row.vehicle_year_id));
+    for (const row of page) {
+      if (coveredVehicleYearIds.has(row.vehicleYearId) || seenVehicleYearIds.has(row.vehicleYearId)) continue;
+      rows.push(row);
+      seenVehicleYearIds.add(row.vehicleYearId);
+      if (rows.length >= limit) break;
+    }
+
+    if (page.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return rows.slice(0, limit).map(({ totalComplaints, totalRecalls, ...row }) => row);
+}
+
 async function runSingleVehicleMode() {
   const startedAt = Date.now();
   const years = yearsRange(START_YEAR, END_YEAR);
@@ -1797,7 +2149,7 @@ async function runSingleVehicleMode() {
         console.log(
           `    year ${year}: recalls=${recallCount}, complaints=${complaintCount} -> consideration ${
             insertedConsideration ? 'inserted' : 'skipped'
-          }, totals_written(recalls=${recallCount}, complaints=${complaintCount}), repair_issues upserted=${issuesResult.upserted} skipped_protected=${issuesResult.skippedProtected}`
+          }, totals_written(recalls=${recallCount}, complaints=${complaintCount}), repair_issues upserted=${issuesResult.upserted} skipped_protected=${issuesResult.skippedProtected} complaint_issue_rows_upserted=${issuesResult.complaintIssueRowsUpserted} recall_issue_rows_upserted=${issuesResult.recallIssueRowsUpserted} fallback_complaint_created=${issuesResult.fallbackComplaintCreated} fallback_recall_created=${issuesResult.fallbackRecallCreated}`
         );
       } catch (dbErr) {
         if (vehicleYearId) {
@@ -1819,6 +2171,7 @@ async function runSingleVehicleMode() {
     console.log(`Inserted repair_issues rows: ${insertedRepairIssues}`);
     console.log(`Skipped protected repair_issues rows: ${skippedProtectedRepairIssues}`);
     console.log(`Failed requests: ${failedRequests}`);
+    console.log(`Handled empty non-2xx responses: ${handledEmptyNon2xxResponses}`);
     console.log(`Elapsed: ${elapsedSec}s`);
     return;
   }
@@ -1885,7 +2238,7 @@ async function runSingleVehicleMode() {
           console.log(
             `    year ${year}: recalls=${recallCount}, complaints=${complaintCount} -> consideration ${
               insertedConsideration ? 'inserted' : 'skipped'
-            }, totals_written(recalls=${recallCount}, complaints=${complaintCount}), repair_issues upserted=${issuesResult.upserted} skipped_protected=${issuesResult.skippedProtected}`
+            }, totals_written(recalls=${recallCount}, complaints=${complaintCount}), repair_issues upserted=${issuesResult.upserted} skipped_protected=${issuesResult.skippedProtected} complaint_issue_rows_upserted=${issuesResult.complaintIssueRowsUpserted} recall_issue_rows_upserted=${issuesResult.recallIssueRowsUpserted} fallback_complaint_created=${issuesResult.fallbackComplaintCreated} fallback_recall_created=${issuesResult.fallbackRecallCreated}`
           );
         } catch (dbErr) {
           if (vehicleYearId) {
@@ -1909,15 +2262,27 @@ async function runSingleVehicleMode() {
   console.log(`Inserted repair_issues rows: ${insertedRepairIssues}`);
   console.log(`Skipped protected repair_issues rows: ${skippedProtectedRepairIssues}`);
   console.log(`Failed requests: ${failedRequests}`);
+  console.log(`Handled empty non-2xx responses: ${handledEmptyNon2xxResponses}`);
   console.log(`Elapsed: ${elapsedSec}s`);
 }
 
 async function runQueuedBatchMode() {
   const startedAt = Date.now();
-  console.log(`Queued batch mode: selecting up to ${MAX_VEHICLE_YEARS_PER_RUN} due vehicle years...`);
+  const queuedBatchLimit = ZERO_ISSUE_BACKFILL_SCOPE.ENABLED
+    ? ZERO_ISSUE_BACKFILL_SCOPE.LIMIT
+    : MAX_VEHICLE_YEARS_PER_RUN;
+  console.log(
+    `Queued batch mode: selecting up to ${queuedBatchLimit} ${
+      ZERO_ISSUE_BACKFILL_SCOPE.ENABLED ? 'zero-issue backfill' : 'due'
+    } vehicle years...`
+  );
 
-  const dueRows = await fetchDueVehicleYears(MAX_VEHICLE_YEARS_PER_RUN);
-  console.log(`Due vehicle_year rows loaded: ${dueRows.length}`);
+  const dueRows = ZERO_ISSUE_BACKFILL_SCOPE.ENABLED
+    ? await fetchZeroIssueBackfillVehicleYears(queuedBatchLimit)
+    : await fetchDueVehicleYears(queuedBatchLimit);
+  console.log(
+    `${ZERO_ISSUE_BACKFILL_SCOPE.ENABLED ? 'Zero-issue backfill' : 'Due'} vehicle_year rows loaded: ${dueRows.length}`
+  );
 
   let processed = 0;
   let completed = 0;
@@ -1953,7 +2318,7 @@ async function runQueuedBatchMode() {
       console.log(
         `    totals_written(recalls=${recallCount}, complaints=${complaintCount}) consideration=${
           insertedConsideration ? 'inserted' : 'skipped'
-        } repair_issues upserted=${issuesResult.upserted} skipped_protected=${issuesResult.skippedProtected}`
+        } repair_issues upserted=${issuesResult.upserted} skipped_protected=${issuesResult.skippedProtected} complaint_issue_rows_upserted=${issuesResult.complaintIssueRowsUpserted} recall_issue_rows_upserted=${issuesResult.recallIssueRowsUpserted} fallback_complaint_created=${issuesResult.fallbackComplaintCreated} fallback_recall_created=${issuesResult.fallbackRecallCreated}`
       );
     } catch (err) {
       errored += 1;
@@ -1972,6 +2337,7 @@ async function runQueuedBatchMode() {
   console.log(`Completed: ${completed}`);
   console.log(`Errored: ${errored}`);
   console.log(`Failed requests: ${failedRequests}`);
+  console.log(`Handled empty non-2xx responses: ${handledEmptyNon2xxResponses}`);
   console.log(`Elapsed: ${elapsedSec}s`);
 }
 
