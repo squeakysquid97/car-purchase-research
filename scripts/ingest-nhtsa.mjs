@@ -19,58 +19,33 @@ const TARGET_MAKES = [
 const TEST_SCOPE = {
   ENABLED: process.env.NHTSA_TEST_SCOPE === 'true',
   VEHICLES: [
-    { MAKE: 'Toyota', MODEL: 'Sienna', YEAR: 2021 },
-    { MAKE: 'Toyota', MODEL: 'Sienna', YEAR: 2023 },
-    { MAKE: 'Toyota', MODEL: 'Sienna', YEAR: 2024 },
-    { MAKE: 'Ford', MODEL: 'E-150', YEAR: 2023 },
-    { MAKE: 'Ford', MODEL: 'F-250', YEAR: 2020 },
-    { MAKE: 'Ford', MODEL: 'F-750', YEAR: 2018 },
-    { MAKE: 'Chevrolet', MODEL: 'Express', YEAR: 2020 },
-    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2019 },
-    { MAKE: 'Nissan', MODEL: '370Z', YEAR: 2019 },
-    { MAKE: 'Nissan', MODEL: 'Frontier', YEAR: 2023 },
-    { MAKE: 'Nissan', MODEL: 'NV', YEAR: 2018 },
-    { MAKE: 'Nissan', MODEL: 'NV', YEAR: 2019 },
-    { MAKE: 'Nissan', MODEL: 'Maxima', YEAR: 2023 },
-    { MAKE: 'Kia', MODEL: 'Cadenza', YEAR: 2020 },
-    { MAKE: 'Subaru', MODEL: 'BRZ', YEAR: 2020 },
-    { MAKE: 'Subaru', MODEL: 'BRZ', YEAR: 2024 },
-    { MAKE: 'BMW', MODEL: '740Li', YEAR: 2019 },
-    { MAKE: 'BMW', MODEL: '750Li', YEAR: 2019 },
-    { MAKE: 'Toyota', MODEL: 'Land Cruiser', YEAR: 2007 },
-    { MAKE: 'Toyota', MODEL: 'FJ Cruiser', YEAR: 2015 },
-    { MAKE: 'Honda', MODEL: 'CTX1300', YEAR: 2014 },
-    { MAKE: 'Honda', MODEL: 'NC700X', YEAR: 2013 },
-    { MAKE: 'Ford', MODEL: 'Ranger', YEAR: 2014 },
-    { MAKE: 'Ford', MODEL: 'Ranger', YEAR: 2016 },
-    { MAKE: 'Ford', MODEL: 'F-350', YEAR: 2015 },
-    { MAKE: 'Ford', MODEL: 'F-450', YEAR: 2007 },
-    { MAKE: 'Ford', MODEL: 'F-450', YEAR: 2008 },
-    { MAKE: 'Ford', MODEL: 'F-550', YEAR: 2007 },
-    { MAKE: 'Ford', MODEL: 'F-550', YEAR: 2008 },
-    { MAKE: 'Ford', MODEL: 'F-650', YEAR: 2007 },
-    { MAKE: 'Ford', MODEL: 'F-650', YEAR: 2012 },
-    { MAKE: 'Ford', MODEL: 'F-650', YEAR: 2016 },
-    { MAKE: 'Ford', MODEL: 'F-750', YEAR: 2012 },
-    { MAKE: 'Chevrolet', MODEL: 'Aveo', YEAR: 2012 },
-    { MAKE: 'Chevrolet', MODEL: 'Sonic', YEAR: 2011 },
-    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2011 },
-    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2013 },
-    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2015 },
-    { MAKE: 'Nissan', MODEL: 'GT-R', YEAR: 2016 },
-    { MAKE: 'Nissan', MODEL: 'Rogue', YEAR: 2007 },
-    { MAKE: 'Nissan', MODEL: 'Armada', YEAR: 2016 },
-    { MAKE: 'Hyundai', MODEL: 'Genesis', YEAR: 2008 },
-    { MAKE: 'Kia', MODEL: 'Borrego', YEAR: 2008 },
-    { MAKE: 'Kia', MODEL: 'Sedona', YEAR: 2013 },
-    { MAKE: 'BMW', MODEL: '128i', YEAR: 2007 },
-    { MAKE: 'BMW', MODEL: '740i', YEAR: 2014 },
-    { MAKE: 'BMW', MODEL: '740i', YEAR: 2015 },
-    { MAKE: 'BMW', MODEL: '750i', YEAR: 2015 },
-    { MAKE: 'BMW', MODEL: '750xi', YEAR: 2013 },
-    { MAKE: 'BMW', MODEL: '750xi', YEAR: 2014 },
-    { MAKE: 'BMW', MODEL: '750xi', YEAR: 2015 },
-    { MAKE: 'BMW', MODEL: '750xi', YEAR: 2016 },
+     // 🔴 Problematic
+  { MAKE: 'Ford', MODEL: 'Focus', YEAR: 2012 },
+  { MAKE: 'Ford', MODEL: 'Fiesta', YEAR: 2014 },
+  { MAKE: 'Nissan', MODEL: 'Altima', YEAR: 2013 },
+  { MAKE: 'Jeep', MODEL: 'Cherokee', YEAR: 2014 },
+  { MAKE: 'BMW', MODEL: '328i', YEAR: 2011 },
+
+  // 🟢 Reliable
+  { MAKE: 'Toyota', MODEL: 'Corolla', YEAR: 2010 },
+  { MAKE: 'Honda', MODEL: 'Civic', YEAR: 2013 },
+  { MAKE: 'Toyota', MODEL: 'Camry', YEAR: 2012 },
+  { MAKE: 'Honda', MODEL: 'Accord', YEAR: 2015 },
+  { MAKE: 'Lexus', MODEL: 'RX 350', YEAR: 2014 },
+
+  // 🟡 Average
+  { MAKE: 'Chevrolet', MODEL: 'Malibu', YEAR: 2016 },
+  { MAKE: 'Hyundai', MODEL: 'Sonata', YEAR: 2015 },
+  { MAKE: 'Kia', MODEL: 'Optima', YEAR: 2016 },
+  { MAKE: 'Ford', MODEL: 'Escape', YEAR: 2016 },
+  { MAKE: 'Mazda', MODEL: 'Mazda3', YEAR: 2014 },
+
+  // ⚠️ Edge Cases
+  { MAKE: 'Ford', MODEL: 'F-150', YEAR: 2018 },
+  { MAKE: 'Ram', MODEL: '1500', YEAR: 2019 },
+  { MAKE: 'Tesla', MODEL: 'Model 3', YEAR: 2020 },
+  { MAKE: 'Subaru', MODEL: 'Outback', YEAR: 2024 },
+  { MAKE: 'Volkswagen', MODEL: 'Jetta', YEAR: 2011 },
   ],
 };
 
@@ -1418,12 +1393,54 @@ function classifyConsideration(recallCount, complaintCount) {
 
 function buildIssueBucketsFromCollections(recallGroups, complaintClusters, { forDisplay = false } = {}) {
   const bucketMap = new Map();
+  const normalizeIssueLabel = (value) =>
+    String(value ?? '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const recallOverlapComponents = new Set(['AIRBAGS', 'BRAKES', 'STEERING', 'FUEL_SYSTEM', 'ELECTRICAL']);
+  const recallOverlapTerms = ['airbag', 'brake', 'fuel leak', 'fire', 'steering', 'electrical'];
+  const recallOverlapIndex = recallGroups.map((recallGroup) => ({
+    component: recallGroup.component,
+    label: normalizeIssueLabel(recallGroup.issueName ?? ''),
+    searchText: normalizeIssueLabel(`${recallGroup.issueName ?? ''} ${recallGroup.normalizedText ?? ''}`),
+  }));
 
   for (const recallGroup of recallGroups) {
     bucketMap.set(`recall::${recallGroup.familyKey}`, recallGroup);
   }
 
   for (const cluster of complaintClusters) {
+    const complaintIssueName =
+      canonicalIssueNameForCluster(
+        cluster.component,
+        cluster.symptom,
+        cluster.normalizedSampleText,
+        complaintSeverityForCluster(cluster.component, cluster.symptom)
+      ) ?? '';
+    const complaintLabel = normalizeIssueLabel(complaintIssueName);
+    const complaintSearchText = normalizeIssueLabel(`${complaintIssueName} ${cluster.normalizedSampleText ?? ''}`);
+
+    // Prevent duplicate recall-driven complaint clusters from inflating issue counts.
+    const overlapsRecallGroup = recallOverlapIndex.some((recallGroup) => {
+      if (recallOverlapComponents.has(cluster.component) && recallGroup.component === cluster.component) {
+        return true;
+      }
+
+      if (complaintLabel && recallGroup.label) {
+        if (complaintLabel === recallGroup.label) return true;
+        if (complaintLabel.includes(recallGroup.label) || recallGroup.label.includes(complaintLabel)) {
+          return true;
+        }
+      }
+
+      return recallOverlapTerms.some(
+        (term) => complaintSearchText.includes(term) && recallGroup.searchText.includes(term)
+      );
+    });
+
+    if (overlapsRecallGroup) continue;
     bucketMap.set(`complaint::${cluster.clusterKey}`, cluster);
   }
 
