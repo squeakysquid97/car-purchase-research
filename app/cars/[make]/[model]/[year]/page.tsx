@@ -199,34 +199,6 @@ export default async function CarSlugPage({ params }: CarSlugPageProps) {
         description,
         url: canonicalUrl,
       },
-      {
-        "@type": "Vehicle",
-        name: vehicleName,
-        model: vehicleModel,
-        brand: {
-          "@type": "Brand",
-          name: vehicleMake,
-        },
-        description,
-        additionalProperty: [
-          {
-            "@type": "PropertyValue",
-            name: "Model Year",
-            value: vehicleYear,
-          },
-          {
-            "@type": "PropertyValue",
-            name: "Buyability Score",
-            value:
-              finalScore != null ? Number(finalScore.toFixed(1)) : "Not available",
-          },
-          {
-            "@type": "PropertyValue",
-            name: "Score Label",
-            value: scoreLabel ?? "Not available",
-          },
-        ],
-      },
     ],
   };
   const safeJsonLd = JSON.stringify(jsonLd)
